@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>谁是卧底 · 联机版</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0f0f1e;color:#c0b090;font-family:'STSong','Songti SC','Noto Serif SC',serif;
+  display:flex;justify-content:center;align-items:center;min-height:100vh}
+#app{width:480px;max-width:100%;padding:20px}
+h1{text-align:center;font-size:32px;letter-spacing:4px;color:#e0c080;margin-bottom:20px}
+.card{background:#18182e;border:1px solid #2a2a44;border-radius:14px;padding:22px 18px;margin-bottom:14px}
+.card h3{font-size:14px;color:#706050;margin-bottom:12px;letter-spacing:2px}
+.input-row{display:flex;gap:8px}
+input{flex:1;background:#121226;border:1px solid #2a2a40;color:#d0c0a0;padding:10px 14px;
+  border-radius:8px;font-family:inherit;font-size:15px;outline:none;text-align:center}
+input:focus{border-color:#604030}
+input::placeholder{color:#3a3050}
+.btn{display:block;width:100%;padding:12px;margin-top:10px;border:1px solid #3a3050;
+  background:linear-gradient(135deg,#1a1a30,#121226);color:#9080b0;font-family:inherit;
+  font-size:14px;border-radius:10px;cursor:pointer;letter-spacing:2px;transition:.2s}
+.btn:hover{border-color:#605090;background:linear-gradient(135deg,#222240,#181830)}
+.btn.red{background:linear-gradient(135deg,#2a1515,#1a0a0a);border-color:#4a2020;color:#c06060}
+.btn.green{background:linear-gradient(135deg,#152a1a,#0a1a0a);border-color:#204a20;color:#60c060}
+.btn:disabled{opacity:.3;pointer-events:none}
+.players{display:flex;flex-wrap:wrap;gap:8px}
+.player-tag{padding:8px 14px;border-radius:20px;font-size:13px;border:1px solid #3a3040;background:#1a1a2e}
+.player-tag .name{color:#c0a060}
+.player-tag.ready{border-color:#305030}.player-tag.dead{opacity:.3;text-decoration:line-through}
+.player-tag.described{border-color:#406080;background:#1a2030}
+.room-id{text-align:center;font-size:24px;letter-spacing:6px;color:#7af;margin:8px 0;font-weight:700}
+.role-reveal{text-align:center;padding:16px 0}
+.role-reveal .big-word{font-size:48px;font-weight:700;margin:12px 0;letter-spacing:8px}
+.role-reveal .label{font-size:12px;color:#605040;letter-spacing:2px}
+.role-reveal .civilian{color:#6b8}.role-reveal .spy{color:#e44}
+
+/* ═══════ 聊天窗 ═══════ */
+.chat-log{
+  max-height:220px;overflow-y:auto;padding:8px 0;margin:8px 0;
+  border-top:1px solid #1a1a30;border-bottom:1px solid #1a1a30;
+}
+.chat-empty{text-align:center;color:#3a3050;font-size:12px;padding:20px;font-style:italic}
+.chat-msg{display:flex;gap:8px;padding:6px 0;animation:msgIn .3s ease}
+.chat-msg .cm-name{color:#c0a060;font-size:11px;white-space:nowrap;min-width:50px;text-align:right}
+.chat-msg .cm-text{color:#a0a0c0;font-size:12px;line-height:1.5;font-style:italic}
+.chat-msg .cm-text::before{content:'"';color:#4a4050}.chat-msg .cm-text::after{content:'"';color:#4a4050}
+.chat-msg.me .cm-name{color:#7af}.chat-msg.me .cm-text{color:#b0c0e0}
+@keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* 描述输入 */
+.desc-box{margin-top:4px}
+.desc-box .desc-hint{font-size:11px;color:#555;margin-bottom:6px;text-align:center}
+.desc-box .desc-row{display:flex;gap:8px}
+.desc-box .desc-row input{text-align:left;font-size:14px}
+.desc-box .desc-row button{padding:10px 16px;border-radius:8px;border:1px solid #3a5a3a;
+  background:#1a2a1a;color:#60c060;font-family:inherit;cursor:pointer;font-size:13px;white-space:nowrap}
+.desc-box .desc-row button:hover{background:#2a3a2a}
+
+.phase-msg{text-align:center;font-size:14px;color:#706050;padding:8px;letter-spacing:2px}
+.phase-msg .action{color:#e0c080;font-weight:700}
+.vote-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+.vote-btn{padding:13px;border-radius:10px;border:1px solid #3a3040;background:#181830;color:#c0a060;
+  font-family:inherit;font-size:14px;cursor:pointer;transition:.2s;letter-spacing:1px}
+.vote-btn:hover{background:#222240;border-color:#605030}
+.result-box{text-align:center;padding:16px 0}
+.result-box .result-title{font-size:28px;margin:8px 0;letter-spacing:4px}
+.result-box .result-detail{font-size:14px;color:#908060;margin:8px 0}
+.tip{font-size:11px;color:#333;text-align:center;margin-top:12px;letter-spacing:1px}
+.err{color:#e44;font-size:12px;text-align:center;margin:6px 0}
+.back-link{text-align:center;margin-top:16px}
+.back-link a{color:#555;text-decoration:none;font-size:12px}
+.status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+.status-dot.connected{background:#4caf50}
+.status-dot.connecting{background:#ff9800;animation:blink .8s infinite}
+.status-dot.disconnected{background:#f44336}
+@keyframes blink{50%{opacity:.3}}
+</style>
+</head>
+<body>
+<div id="app">
+<h1>🎭 谁是卧底 <span style="font-size:11px;color:#555"><span class="status-dot connecting" id="wsDot"></span><span id="wsStatus">连接中</span></span></h1>
+
+<div id="loginView" class="card">
+  <h3>加入游戏</h3>
+  <div class="input-row"><input id="nameIn" placeholder="你的昵称" maxlength="8"></div>
+  <div class="input-row" style="margin-top:8px"><input id="roomIn" placeholder="房间号" maxlength="8"></div>
+  <button class="btn green" onclick="doJoin()">📥 加入房间</button>
+  <button class="btn" onclick="doCreate()">🏠 创建新房间</button>
+  <p class="err" id="errMsg"></p>
+</div>
+
+<div id="roomView" style="display:none">
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h3 style="margin:0">房间</h3><span style="font-size:11px;color:#555" id="roomStatus">等待中</span>
+    </div>
+    <div class="room-id" id="roomIdDisplay"></div>
+    <div class="players" id="playerList"></div>
+    <button class="btn green" id="readyBtn" onclick="doReady()">✅ 准备</button>
+    <button class="btn red" id="startBtn" onclick="doStart()" style="display:none">🚀 开始游戏</button>
+    <button class="btn" id="restartBtn" onclick="doRestart()" style="display:none">🔄 再来一局</button>
+  </div>
+
+  <div class="card" id="gameInfo" style="display:none">
+    <div class="role-reveal">
+      <div class="label" id="roleLabel">你的身份</div>
+      <div class="big-word" id="roleWord"></div>
+      <div class="label" id="roleHint"></div>
+    </div>
+    <!-- 实时聊天窗 -->
+    <div class="chat-log" id="chatLog"><div class="chat-empty">等待大家描述…</div></div>
+    <!-- 描述输入 -->
+    <div class="desc-box" id="describeBox">
+      <div class="desc-hint">✏️ 用一句话描述你的词（不能直接说出来！）</div>
+      <div class="desc-row">
+        <input id="descInput" placeholder="例如：这个东西圆圆的..." maxlength="50">
+        <button onclick="submitDesc()">发送</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="voteBox" style="display:none">
+    <h3>🗳 投票淘汰</h3>
+    <div class="phase-msg" id="phaseMsg"></div>
+    <div class="vote-grid" id="voteGrid"></div>
+  </div>
+
+  <div class="card" id="resultBox" style="display:none">
+    <div class="result-box">
+      <div class="result-title" id="resultTitle"></div>
+      <div class="result-detail" id="resultDetail"></div>
+    </div>
+  </div>
+</div>
+
+<p class="tip">分享房间号给朋友 · 不足3人自动补机器人</p>
+<p class="back-link"><a href="/">← 返回摸鱼首页</a></p>
+</div>
+
+<script>
+var ws=null,roomId=null,playerId=null,myRole=null,myWord=null,roomData=null,pending=[];
+
+function G(id){return document.getElementById(id)}
+function show(id){G(id).style.display='block'}
+function hide(id){G(id).style.display='none'}
+function err(m){G('errMsg').textContent=m;setTimeout(function(){G('errMsg').textContent=''},3000)}
+
+// ═══════ WebSocket ═══════
+function setWsStatus(s){
+  G('wsStatus').textContent=s;
+  G('wsDot').className='status-dot '+(s==='已连接'?'connected':s==='连接中'?'connecting':'disconnected');
+}
+function openWs(){
+  if(ws&&(ws.readyState===0||ws.readyState===1))return;
+  setWsStatus('连接中');
+  var proto=location.protocol==='https:'?'wss://':'ws://';
+  var wsPort=location.protocol==='https:'?'':':8899';
+  ws=new WebSocket(proto+location.hostname+wsPort);
+  ws.onopen=function(){
+    setWsStatus('已连接');
+    while(pending.length>0)ws.send(JSON.stringify(pending.shift()));
+  };
+  ws.onmessage=function(e){handle(JSON.parse(e.data));};
+  ws.onclose=function(){setWsStatus('已断开');ws=null;};
+  ws.onerror=function(){setWsStatus('已断开');};
+}
+function send(m){
+  if(ws&&ws.readyState===1)ws.send(JSON.stringify(m));
+  else{pending.push(m);openWs();}
+}
+openWs();
+
+// ═══════ 消息处理 ═══════
+function handle(m){
+  if(m.type==='joined'){
+    roomId=m.roomId;playerId=m.playerId;roomData=m.room;
+    hide('loginView');show('roomView');G('roomIdDisplay').textContent=roomId;renderRoom();
+  }else if(m.type==='update'){
+    roomData=m.room;renderRoom();
+  }else if(m.type==='role'){
+    myRole=m.role;myWord=m.word;
+    hide('voteBox');show('gameInfo');
+    G('roleWord').textContent=m.word;
+    G('describeBox').style.display='block';G('descInput').value='';
+    G('chatLog').innerHTML='<div class="chat-empty">等待大家描述…</div>';
+    setTimeout(function(){G('descInput').focus();},200);
+    G('roleLabel').textContent=m.role==='spy'?'🕵️ 你是卧底！':'👥 你是平民';
+    G('roleWord').className='big-word '+(m.role==='spy'?'spy':'civilian');
+    G('roleHint').textContent=m.role==='spy'?'隐藏身份，混过去！':'找出卧底！';
+    G('roomStatus').textContent='游戏中 · 描述环节';
+  }else if(m.type==='chat'){
+    // 实时聊天消息
+    addChatMsg(m.name,m.text,m.playerId===playerId);
+  }else if(m.type==='phase'){
+    renderPhase(m);
+  }else if(m.type==='result'){
+    renderResult(m);
+  }else if(m.type==='error'){
+    err(m.msg);
+  }
+}
+
+// ═══════ 聊天窗 ═══════
+function addChatMsg(name,text,isMe){
+  var log=G('chatLog');
+  if(log.querySelector('.chat-empty'))log.innerHTML='';
+  var div=document.createElement('div');
+  div.className='chat-msg'+(isMe?' me':'');
+  div.innerHTML='<span class="cm-name">'+name+'</span><span class="cm-text">'+text+'</span>';
+  log.appendChild(div);
+  log.scrollTop=log.scrollHeight;
+}
+
+// ═══════ 界面 ═══════
+function renderRoom(){
+  if(!roomData)return;
+  var players=Object.values(roomData.players);
+  G('playerList').innerHTML=players.map(function(p){
+    var cls='player-tag';
+    if(p.ready)cls+=' ready';if(!p.alive)cls+=' dead';
+    if(p.described)cls+=' described';
+    var badge='';
+    if(roomData.host===p.id)badge=' 👑';
+    if(!p.alive)badge=' 💀';
+    if(p.described)badge+=' ✓';
+    return'<div class="'+cls+'"><span class="name">'+p.name+badge+'</span></div>';
+  }).join('');
+
+  var me=null;
+  for(var i=0;i<players.length;i++){if(players[i].id===playerId){me=players[i];break;}}
+  G('roomStatus').textContent=roomData.status==='waiting'?'等待中 · '+players.length+'人':
+    roomData.status==='describing'?'游戏中 · 描述环节':
+    roomData.status==='voting'?'游戏中 · 投票环节':'游戏中 · 第'+roomData.round+'轮';
+  G('readyBtn').style.display=roomData.status==='waiting'?'block':'none';
+  G('readyBtn').textContent=me&&me.ready?'✅ 取消准备':'✅ 准备';
+  G('startBtn').style.display=roomData.host===playerId&&roomData.status==='waiting'?'block':'none';
+  G('restartBtn').style.display=roomData.host===playerId&&roomData.status==='end'?'block':'none';
+  G('voteBox').style.display='none';
+  G('gameInfo').style.display=(roomData.status==='waiting'||roomData.status==='end')?'none':'block';
+}
+
+function renderPhase(m){
+  if(!roomData)return;
+  var alive=[];
+  var all=Object.values(roomData.players);
+  for(var i=0;i<all.length;i++){if(all[i].alive&&all[i].id!==playerId)alive.push(all[i]);}
+  var meAlive=roomData.players[playerId]&&roomData.players[playerId].alive;
+
+  if(!meAlive){
+    G('phaseMsg').innerHTML='你已经出局了 💀 · 等待游戏结束';
+    G('voteGrid').innerHTML='';
+    return;
+  }
+
+  G('describeBox').style.display='none';
+  show('voteBox');hide('gameInfo');
+  G('roomStatus').textContent='游戏中 · 投票环节';
+  G('phaseMsg').innerHTML='<span class="action">请投票</span>选出卧底（第'+m.round+'轮）'+(m.elimMsg?'<br><span style="color:#a06050">上一轮：'+m.elimMsg+'</span>':'');
+  G('voteGrid').innerHTML=alive.map(function(p){
+    return'<button class="vote-btn" onclick="doVote(\''+p.id+'\')">'+p.name+'</button>';
+  }).join('');
+}
+
+function renderResult(m){
+  hide('voteBox');hide('gameInfo');show('resultBox');
+  G('describeBox').style.display='none';
+  G('resultTitle').textContent=m.win==='civilian'?'🎉 平民胜利！':'🕵️ 卧底胜利！';
+  G('resultTitle').style.color=m.win==='civilian'?'#6b8':'#e44';
+  G('resultDetail').textContent=m.msg+'\n平民词：「'+m.wordPair[0]+'」  卧底词：「'+m.wordPair[1]+'」';
+  G('restartBtn').style.display=roomData&&roomData.host===playerId?'block':'none';
+}
+
+function doCreate(){var n=G('nameIn').value.trim();if(!n){err('输入昵称');return};send({type:'create',name:n})}
+function doJoin(){var n=G('nameIn').value.trim(),r=G('roomIn').value.trim().toUpperCase();if(!n||!r){err('输入昵称和房间号');return};send({type:'join',roomId:r,name:n})}
+function doReady(){send({type:'ready'})}
+function doStart(){send({type:'start'})}
+function submitDesc(){var t=G('descInput').value.trim();if(!t){err('输入描述');return};send({type:'describe',text:t});G('describeBox').style.display='none';G('roleHint').textContent='描述已发送，等待其他人…'}
+function doVote(tid){send({type:'vote',targetId:tid})}
+function doRestart(){send({type:'restart'})}
+</script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>今天摸哪条鱼？</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:6% 20px;
+  background:url(桌面.png) center/cover no-repeat;
+  font-family:'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+}
+.wrap{display:flex;flex-direction:column;gap:14px;max-width:800px}
+h1{font-size:36px;font-weight:700;color:#2c3e50;margin-bottom:4px;letter-spacing:2px}
+.sub{font-size:14px;color:#7f8c8d;margin-bottom:14px;letter-spacing:1px}
+.cards{display:flex;gap:16px;flex-wrap:wrap}
+.card{
+  width:170px;padding:28px 16px 22px;border-radius:20px;text-align:center;cursor:pointer;
+  background:rgba(255,255,255,.72);backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,.9);box-shadow:0 4px 20px rgba(0,0,0,.06);
+  transition:all .3s cubic-bezier(.34,1.56,.64,1);text-decoration:none;color:inherit;
+  display:flex;flex-direction:column;align-items:center;
+}
+.card:hover{transform:translateY(-6px);box-shadow:0 12px 36px rgba(100,140,220,.18),0 0 0 1px rgba(120,160,220,.3)}
+.card .icon{width:80px;height:80px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:42px;margin-bottom:14px;position:relative;
+  background:linear-gradient(135deg,rgba(220,230,248,.7),rgba(200,215,240,.4))}
+.card .name{font-size:18px;font-weight:700;color:#2c3e50;margin-bottom:6px;letter-spacing:1px}
+.card .hint{font-size:11px;color:#95a5a6;line-height:1.5}
+
+.fortune-icon{position:relative}
+.fortune-icon .tube{width:30px;height:48px;background:linear-gradient(180deg,#c8a060,#8b6914);
+  border-radius:8px 8px 12px 12px;position:relative;border:2px solid #6b4e0a;margin:0 auto}
+.fortune-icon .tube::after{content:'';position:absolute;bottom:-3px;left:-3px;right:-3px;height:5px;background:#5a3e08;border-radius:0 0 6px 6px}
+.fortune-icon .stick{position:absolute;width:2px;height:28px;background:#e8d5a0;left:50%;top:6px;transform:translateX(-50%);border-radius:1px}
+.fortune-icon .stick.high{height:36px;background:#f0e0b0;top:-2px}
+.fortune-icon .coins{position:absolute;bottom:2px;right:14px;display:flex;gap:3px}
+.fortune-icon .coin{width:10px;height:10px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#daa520,#8b6914);border:1px solid #6b4e0a}
+.fortune-icon .yin-yang{position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);width:16px;height:8px;border-radius:0 0 16px 16px;border:1px solid rgba(139,105,20,.2);border-top:none}
+
+.spy-icon .heads{display:flex;gap:2px;position:relative}
+.spy-icon .head{width:22px;height:22px;border-radius:50%;border:2px solid #8899aa;position:relative}
+.spy-icon .head.spy{border-color:#e67e22;background:rgba(230,126,34,.1)}
+.spy-icon .head.spy::after{content:'';position:absolute;top:2px;left:2px;right:2px;height:6px;background:#e67e22;border-radius:3px}
+.spy-icon .head.p1{background:rgba(120,160,200,.3)}.spy-icon .head.p2{background:rgba(120,160,200,.3)}
+.spy-icon .glass{position:absolute;top:8px;left:-10px;font-size:20px}
+
+.foot{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);font-size:11px;color:rgba(100,110,120,.4);letter-spacing:1px}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <h1>今天摸哪条鱼？</h1>
+  <p class="sub">上班摸鱼，从选一个开始 🐟</p>
+
+  <div class="cards">
+    <a class="card" href="/fortune.html">
+      <div class="icon fortune-icon">
+        <div class="tube"><div class="stick"></div><div class="stick high"></div><div class="stick"></div></div>
+        <div class="coins"><div class="coin"></div><div class="coin"></div><div class="coin"></div></div>
+        <div class="yin-yang"></div>
+      </div>
+      <div class="name">今日一签</div>
+      <div class="hint">摇一签，看看今天<br>适不适合努力</div>
+    </a>
+
+    <a class="card" href="/party.html">
+      <div class="icon spy-icon">
+        <div class="heads"><div class="head p1"></div><div class="head spy"></div><div class="head p2"></div></div>
+        <div class="glass">🔍</div>
+      </div>
+      <div class="name">谁是卧底</div>
+      <div class="hint">描述词语+投票<br>揪出卧底</div>
+    </a>
+
+    <a class="card" href="/word-fish.html" style="border:1px solid rgba(37,99,235,.25);background:rgba(245,248,255,.78)">
+      <div class="icon" style="background:linear-gradient(135deg,#dbeafe,#bfdbfe);font-size:28px">
+        <span style="font-weight:900;font-size:22px">W</span>
+        <span style="position:absolute;bottom:8px;right:14px;font-size:14px;opacity:.5">🐟</span>
+      </div>
+      <div class="name" style="color:#2563eb">伪装Word</div>
+      <div class="hint">AI共创小说<br>高仿Office界面</div>
+    </a>
+
+    <a class="card" href="/moyu.html">
+      <div class="icon" style="background:linear-gradient(135deg,rgba(180,200,230,.6),rgba(160,190,220,.3))">📊</div>
+      <div class="name">摸鱼面板</div>
+      <div class="hint">2048 · 反应测试<br>伪装成监控系统</div>
+    </a>
+
+    <a class="card" href="/turtle.html">
+      <div class="icon" style="background:linear-gradient(135deg,rgba(190,210,200,.6),rgba(170,200,190,.3))">🐢</div>
+      <div class="name">海龟汤</div>
+      <div class="hint">25碗推理汤<br>烧脑解谜</div>
+    </a>
+  </div>
+</div>
+
+<div class="foot">仅供摸鱼 · 摸得开心 🐟</div>
+
+</body>
+</html>

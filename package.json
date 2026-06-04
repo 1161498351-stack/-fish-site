@@ -1,0 +1,12 @@
+{
+  "name": "fish-site",
+  "version": "1.0.0",
+  "description": "摸鱼网站 — 谁是卧底 + AI算命 + AI写小说",
+  "main": "party-server.js",
+  "scripts": {
+    "start": "node party-server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

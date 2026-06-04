@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>灵签 · 八字事业</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:linear-gradient(180deg,rgba(20,5,5,.82) 0%,rgba(30,10,10,.78) 50%,rgba(10,3,3,.88) 100%),
+    url(背景.png) center/cover no-repeat fixed;
+  color:#f0d080;font-family:'STSong','Songti SC','Noto Serif SC','SimSun',serif;
+  display:flex;justify-content:center;align-items:center;min-height:100vh;
+  overflow-x:hidden;-webkit-tap-highlight-color:transparent;user-select:none;
+}
+.container{max-width:480px;width:100%;padding:20px;text-align:center}
+
+.decor{margin-bottom:12px}
+.decor span{display:inline-block;vertical-align:middle}
+.decor .line{width:36px;height:1px;background:linear-gradient(90deg,transparent,#a04040,transparent);margin:0 10px}
+.decor .diamond{width:8px;height:8px;background:#c04040;transform:rotate(45deg);margin:0 4px}
+h1{font-size:44px;letter-spacing:12px;font-weight:400;margin-bottom:6px;
+  background:linear-gradient(180deg,#f8e0a0 0%,#c08848 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.subtitle{font-size:13px;color:#704040;letter-spacing:6px;margin-bottom:8px}
+
+.bazi-toggle{font-size:12px;color:#604040;letter-spacing:2px;cursor:pointer;
+  padding:6px 18px;border:1px solid #402020;border-radius:14px;display:inline-block;
+  transition:all .3s;margin-bottom:24px}
+.bazi-toggle:hover{color:#b08060;border-color:#604040}
+.bazi-toggle.active{color:#c08040;border-color:#604040;background:rgba(60,20,20,.3)}
+
+.bazi-panel{
+  background:linear-gradient(180deg,rgba(30,10,10,.9),rgba(20,6,6,.9));
+  border:1px solid #402020;border-radius:14px;padding:20px 16px;margin-bottom:24px}
+.bazi-panel .row{display:flex;gap:8px;margin-bottom:10px;justify-content:center;flex-wrap:wrap}
+.bazi-panel label{font-size:12px;color:#805050;letter-spacing:1px;display:block;margin-bottom:3px}
+.bazi-panel select{background:#1a0808;color:#e0c080;border:1px solid #503030;border-radius:6px;
+  padding:7px 10px;font-size:14px;font-family:inherit;outline:none;min-width:60px}
+.bazi-panel select:focus{border-color:#a06040}
+.bazi-panel .submit-btn{display:block;margin:10px auto 0;padding:8px 28px;
+  background:linear-gradient(135deg,#6b2020,#4a1010);border:1px solid #703030;
+  color:#f0d080;font-family:inherit;font-size:13px;letter-spacing:3px;
+  border-radius:18px;cursor:pointer;transition:all .3s}
+.bazi-panel .submit-btn:hover{background:linear-gradient(135deg,#803030,#5a1818)}
+
+.bazi-result{display:none;margin-bottom:20px}
+.bazi-result.show{display:block}
+.bazi-pillars{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+.pillar{background:rgba(20,6,6,.8);border:1px solid #503030;border-radius:10px;
+  padding:10px 12px;text-align:center;min-width:64px}
+.pillar .p-name{font-size:10px;color:#704040;letter-spacing:2px;margin-bottom:2px}
+.pillar .p-gan{font-size:18px;color:#f0d080;font-weight:700}
+.pillar .p-zhi{font-size:14px;color:#c09060}
+.day-master{display:inline-block;margin-top:8px;padding:4px 14px;border-radius:12px;
+  font-size:12px;letter-spacing:2px;border:1px solid #604040}
+.dm-wood{color:#6b9;border-color:#6b9}.dm-fire{color:#f66;border-color:#f66}
+.dm-earth{color:#db5;border-color:#db5}.dm-metal{color:#fc6;border-color:#fc6}
+.dm-water{color:#69c;border-color:#69c}
+
+.tong-wrap{position:relative;width:160px;height:240px;margin:0 auto 32px;
+  filter:drop-shadow(0 8px 32px rgba(0,0,0,.6))}
+.tong{
+  position:relative;width:100%;height:100%;
+  background:linear-gradient(180deg,#5a2828 0%,#3a1818 40%,#2d1010 100%);
+  border-radius:16px 16px 22px 22px;border:2px solid #704030;
+  box-shadow:inset 0 4px 16px rgba(0,0,0,.4),0 0 0 6px rgba(10,4,4,.5);
+  cursor:pointer;transition:transform .4s;overflow:hidden}
+.tong:active{transform:scale(.96)}
+.tong::before{content:'';position:absolute;top:4px;left:8px;right:8px;height:50%;
+  background:linear-gradient(180deg,rgba(255,255,255,.04),transparent);border-radius:12px;pointer-events:none}
+.tong .ring{position:absolute;left:4px;right:4px;height:3px;
+  background:linear-gradient(90deg,transparent,#906040,transparent);opacity:.5}
+.tong .ring:nth-child(1){top:22%}.tong .ring:nth-child(2){top:52%}.tong .ring:nth-child(3){top:78%}
+.tong .sticks-area{position:absolute;top:16px;left:50%;transform:translateX(-50%);
+  display:flex;flex-wrap:wrap;justify-content:center;gap:4px;width:110px}
+.tong .stick{width:3px;height:64px;background:linear-gradient(180deg,#ecd4a0,#b88850);border-radius:2px}
+.tong .stick.gold{background:linear-gradient(180deg,#ffd700,#ff9400);animation:pulse .7s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 3px #ffd700}50%{box-shadow:0 0 14px #ff9400,0 0 24px #ff6600}}
+.tong .label{position:absolute;bottom:22px;width:100%;text-align:center;
+  font-size:16px;color:#b07050;letter-spacing:5px;pointer-events:none}
+.tong .base{position:absolute;bottom:-8px;left:-4px;right:-4px;height:12px;
+  background:linear-gradient(180deg,#4a2020,#2d1010);border-radius:0 0 16px 16px;border:2px solid #5a3020;border-top:none}
+
+.tong.shaking{animation:shake .12s infinite}
+@keyframes shake{
+  0%,100%{transform:translateX(0)rotate(0deg)}
+  15%{transform:translateX(-8px)rotate(-4deg)}30%{transform:translateX(8px)rotate(4deg)}
+  45%{transform:translateX(-12px)rotate(-6deg)}60%{transform:translateX(12px)rotate(6deg)}
+  75%{transform:translateX(-5px)rotate(-2deg)}90%{transform:translateX(5px)rotate(2deg)}}
+
+.stick-fly{position:fixed;width:4px;height:80px;border-radius:3px;z-index:200;
+  background:linear-gradient(180deg,#ffd700,#ff8c00);box-shadow:0 0 20px rgba(255,180,0,.8);
+  animation:flyUp .9s cubic-bezier(.22,.61,.36,1) forwards}
+@keyframes flyUp{0%{transform:translateY(0)rotate(0deg);opacity:1}60%{opacity:1}100%{transform:translateY(-60vh)rotate(720deg);opacity:0}}
+.particle{position:fixed;width:4px;height:4px;border-radius:50%;z-index:199;pointer-events:none;
+  animation:partUp .8s ease-out forwards}
+@keyframes partUp{0%{transform:translate(0,0)scale(1);opacity:1}100%{transform:translate(var(--dx),var(--dy))scale(0);opacity:0}}
+
+.result{display:none;opacity:0;transform:translateY(40px);
+  background:linear-gradient(180deg,rgba(35,12,12,.97),rgba(20,6,6,.97));
+  border:1px solid #5a3030;border-radius:20px;padding:32px 24px 24px;
+  box-shadow:0 12px 60px rgba(0,0,0,.6);transition:all .5s cubic-bezier(.34,1.56,.64,1)}
+.result.show{display:block;opacity:1;transform:translateY(0)}
+.badge{display:inline-block;padding:4px 20px;border-radius:20px;font-size:12px;letter-spacing:4px;margin-bottom:10px}
+.badge.good{color:#5cb85c;border:1px solid #5cb85c}.badge.warn{color:#f0ad4e;border:1px solid #f0ad4e}.badge.bad{color:#d9534f;border:1px solid #d9534f}
+.result .sign-name{font-size:28px;margin:10px 0 4px;letter-spacing:4px}
+.result .poem{font-size:15px;color:#b89070;line-height:2.2;margin:16px 0;padding:14px 0;border-top:1px solid #402020;border-bottom:1px solid #402020;white-space:pre-line}
+.result .reading{font-size:14px;color:#c8a880;line-height:1.9;text-align:left}
+.result .reading em{color:#ffd700;font-weight:700;font-style:normal}
+.result .bazi-reading{font-size:13px;color:#c09060;line-height:1.8;text-align:left;
+  margin-top:10px;padding:12px 14px;background:rgba(60,20,20,.3);border-radius:10px;border:1px solid #402020}
+.result .bazi-reading em{color:#ffb800;font-weight:700;font-style:normal}
+.result .advice-tag{display:inline-block;margin-top:14px;padding:8px 22px;
+  background:linear-gradient(135deg,rgba(180,50,50,.25),rgba(140,30,30,.25));
+  border:1px solid #703030;border-radius:20px;font-size:13px;color:#d89090;letter-spacing:2px}
+.result .again{display:block;margin:22px auto 0;padding:11px 36px;background:transparent;
+  border:1px solid #503030;color:#a08060;font-family:inherit;font-size:14px;letter-spacing:3px;
+  border-radius:22px;cursor:pointer;transition:all .3s}
+.result .again:hover{border-color:#c08060;color:#f0d080;box-shadow:0 0 20px rgba(180,80,80,.15)}
+.bottom-text{font-size:11px;color:#301818;letter-spacing:2px;margin-top:28px}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="decor"><span class="line"></span><span class="diamond"></span><span class="line"></span></div>
+  <h1>灵 签</h1>
+  <p class="subtitle">· 八字事业 ·</p>
+
+  <div class="bazi-panel" id="baziPanel">
+    <div class="row">
+      <div><label>年</label><select id="byear"></select></div>
+      <div><label>月</label><select id="bmonth"></select></div>
+      <div><label>日</label><select id="bday"></select></div>
+      <div><label>时</label><select id="bhour"><option value="0">子时 23-1</option><option value="1">丑时 1-3</option><option value="2">寅时 3-5</option><option value="3">卯时 5-7</option><option value="4">辰时 7-9</option><option value="5">巳时 9-11</option><option value="6">午时 11-13</option><option value="7">未时 13-15</option><option value="8">申时 15-17</option><option value="9">酉时 17-19</option><option value="10">戌时 19-21</option><option value="11">亥时 21-23</option></select></div>
+    </div>
+    <button class="submit-btn" onclick="calcBazi()">排八字</button>
+    <div class="bazi-result" id="baziResult">
+      <div class="bazi-pillars" id="pillars"></div>
+      <div class="day-master" id="dayMaster"></div>
+    </div>
+  </div>
+
+  <div class="tong-wrap" id="tongWrap">
+    <div class="tong" id="tong" onclick="shake()">
+      <div class="ring"></div><div class="ring"></div><div class="ring"></div>
+      <div class="sticks-area">
+        <div class="stick"></div><div class="stick"></div><div class="stick"></div>
+        <div class="stick"></div><div class="stick"></div><div class="stick gold"></div>
+        <div class="stick"></div><div class="stick"></div><div class="stick"></div>
+        <div class="stick"></div><div class="stick"></div><div class="stick"></div>
+        <div class="stick"></div><div class="stick"></div>
+      </div>
+      <div class="label">轻触摇签</div>
+      <div class="base"></div>
+    </div>
+  </div>
+
+  <div class="result" id="result">
+    <div class="badge" id="badge"></div>
+    <div class="sign-name" id="sname"></div>
+    <div class="poem" id="poem"></div>
+    <div class="reading" id="reading"></div>
+    <div class="bazi-reading" id="baziReading" style="display:none"></div>
+    <div class="advice-tag" id="advice"></div>
+    <button class="again" onclick="backToTong()">再求一签</button>
+  </div>
+
+  <p class="bottom-text">心诚则灵 · 仅供娱乐<br><a href="/" style="color:#503030;text-decoration:none;font-size:12px">← 返回摸鱼首页</a></p>
+</div>
+
+<script>
+const GAN=['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+const ZHI=['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+const WUXING_MAP={'甲':'木','乙':'木','丙':'火','丁':'火','戊':'土','己':'土','庚':'金','辛':'金','壬':'水','癸':'水'};
+
+function yearPillar(y){const i=(y-4)%60;return{gan:GAN[i%10],zhi:ZHI[i%12],idx:i};}
+function monthPillar(yearGan,m){const yg=GAN.indexOf(yearGan);
+  const monthGan=(yg*2+m)%10;return{gan:GAN[monthGan],zhi:ZHI[(m+1)%12]};}
+function dayPillar(y,m,d){const date=new Date(y,m-1,d);
+  const ref=new Date(1900,0,1);const days=Math.floor((date-ref)/864e5);
+  return{gan:GAN[(days%10+10)%10],zhi:ZHI[(days%12+10)%12]};}
+function hourPillar(dayGan,h){const dg=GAN.indexOf(dayGan);
+  const hg=(dg*2+h)%10;return{gan:GAN[hg],zhi:ZHI[h]};}
+
+let baziData=null;
+
+function calcBazi(){
+  const y=parseInt(document.getElementById('byear').value);
+  const m=parseInt(document.getElementById('bmonth').value);
+  const d=parseInt(document.getElementById('bday').value);
+  const h=parseInt(document.getElementById('bhour').value);
+  if(!y||!m||!d){return}
+
+  const yp=yearPillar(y), mp=monthPillar(yp.gan,m);
+  const dp=dayPillar(y,m,d), hp=hourPillar(dp.gan,h);
+  baziData={year:yp,month:mp,day:dp,hour:hp};
+
+  const pillars=[
+    {name:'年柱',gan:yp.gan,zhi:yp.zhi},{name:'月柱',gan:mp.gan,zhi:mp.zhi},
+    {name:'日柱',gan:dp.gan,zhi:dp.zhi},{name:'时柱',gan:hp.gan,zhi:hp.zhi}
+  ];
+  document.getElementById('pillars').innerHTML=pillars.map(p=>
+    '<div class="pillar"><div class="p-name">'+p.name+'</div><div class="p-gan">'+p.gan+'</div><div class="p-zhi">'+p.zhi+'</div></div>'
+  ).join('');
+
+  const dm=WUXING_MAP[dp.gan];
+  const dmEl=document.getElementById('dayMaster');
+  dmEl.textContent='日主 · '+dp.gan+'（'+dm+'命）';
+  dmEl.className='day-master dm-'+{木:'wood',火:'fire',土:'earth',金:'metal',水:'water'}[dm];
+  document.getElementById('baziResult').classList.add('show');
+}
+
+function baziReading(dayGan,lotType){
+  const wx=WUXING_MAP[dayGan];
+  const readings={
+    '木':{
+      good:'<em>甲/乙木命</em>的你，今年木气旺盛。木主生长——<em>事业如春笋破土，适合开疆拓土</em>。上半年贵人多为属虎兔猪之人。创业、跳槽、转行皆宜，尤其与文化、教育、环保相关的行业发力最佳。',
+      warn:'<em>甲/乙木命</em>的你，木逢金秋需收敛。今年不是扩张之年——<em>适合扎根而非开花</em>。把地基打牢，学习考证内功优先。避免和属猴鸡之人有利益纠葛。秋冬低调做人，春天自有回报。',
+      bad:'<em>甲/乙木命</em>今年遇到金克木之局。<em>但不破不立——砍掉枯枝才能发出新芽</em>。不要死守现在的岗位或方向不放。换个角度想：你被"修剪"了，是为了来年长得更高。'},
+    '火':{
+      good:'<em>丙/丁火命</em>的你，今年火借风势。<em>发光发热是你的天命——站到台前去</em>。适合演讲、汇报、自媒体、销售这类需要感染力的工作。上半年贵人多为属蛇马羊之人。但注意别烧过头，团队关系要维护。',
+      warn:'<em>丙/丁火命</em>今年火势被水压制。<em>你的一腔热血可能遇到冷处理</em>——不要因此灰心。适合转做幕后准备，少抛头露面。避免和属鼠猪之人正面冲突。积攒能量，冬天回暖。',
+      bad:'<em>丙/丁火命</em>今年火弱水旺。<em>你像一支快要熄灭的蜡烛——找到助燃你的人很重要</em>。多和积极的人在一起，远离打压你的人。今年"活下来"比"赢"重要。年底火势回升。'},
+    '土':{
+      good:'<em>戊/己土命</em>的你，今年土厚载物。<em>稳扎稳打是你的王牌——不适合投机取巧</em>。脚踏实地的积累会在年中引来大客户或大项目。贵人多为属牛龙狗之人。房产、建筑、农业相关行业格外顺。',
+      warn:'<em>戊/己土命</em>今年土被木克。<em>你可能觉得被"掏空"——项目太多精力分散</em>。学会拒绝，聚焦一两个核心任务。避免同时讨好所有人。属虎兔之人可能带来竞争压力。',
+      bad:'<em>戊/己土命</em>今年土虚不固。<em>根基动摇不是你能力的问题，是地壳在运动</em>。行业巨变中站不稳很正常。别裸辞，但可以悄悄准备跳槽。冬天是转机窗口。'},
+    '金':{
+      good:'<em>庚/辛金命</em>的你，今年金气凌厉。<em>决断力是你的超能力——该砍的砍，该投的投</em>。金融、法律、科技行业特别顺。贵人多为属猴鸡之人。上半年适合跳槽谈薪，大胆开口。',
+      warn:'<em>庚/辛金命</em>今年金被火炼。<em>你像一把刀在被淬火——过程痛苦但会变得更锋利</em>。高强度压力下坚持住，技能提升会远超预期。避免和属蛇马之人硬碰硬。',
+      bad:'<em>庚/辛金命</em>今年金入火乡而退气。<em>锋芒毕露会伤到自己——收起棱角，先观察再出手</em>。今年最大的敌人是冲动。每一刀都看准了再砍。秋冬会有贵人雪中送炭。'},
+    '水':{
+      good:'<em>壬/癸水命</em>的你，今年水势浩荡。<em>灵活变通是你最大的优势——顺势而为无往不利</em>。物流、贸易、传媒、互联网行业大利。贵人多为属鼠猪之人。下半年机会尤其多，保持流动不要停。',
+      warn:'<em>壬/癸水命</em>今年水被土堵。<em>你可能觉得处处受限、推不动事——不是你的错</em>。换个角度找缝隙，水总能渗透过去。小步迭代比大刀阔斧有效。避免和属牛龙狗之人争权。',
+      bad:'<em>壬/癸水命</em>今年水流入死潭。<em>你像被困在一潭死水中——不动会臭，乱动会浊</em>。先停下来看清方向再走。不要因为"别人都在动"就焦虑。静下心来学门新技能，水自然会找到出口。'}
+  };
+  return readings[wx][lotType]||'';
+}
+
+const LOTS=[
+{type:'good',sign:'上上签 · 青龙得位',poem:'云开雾散见青天\n紫气东来满庭前\n贵人已在来时路\n只待春风度玉关',reading:'<em>今年是事业的转折之年。</em>上半年虽有迷雾，清明过后形势渐明。年中是关键窗口——重要机会将出现，<em>务必主动争取，不可犹豫</em>。秋冬有晋升或跨行良机，贵人来自比你年长的前辈。',advice:'宜：主动出击 · 上半年积累 · 下半年收割'},
+{type:'good',sign:'上上签 · 日照金山',poem:'金乌出海耀千峰\n万里云烟一扫空\n自有机缘来凑巧\n不须惆怅叹途穷',reading:'<em>天时地利人和齐聚。</em>一个成功会引发连锁反应。上半年完成的项目将在业内形成口碑效应。<em>主动分享成果、站上台前</em>，曝光度直接决定下半年能走多高。创业者有望拿到关键融资。',advice:'宜：站上台前 · 放大成果 · 乘胜追击'},
+{type:'good',sign:'上签 · 凤凰于飞',poem:'梧桐枝上凤凰栖\n一鸣惊人天下知\n莫愁前路少知己\n桃李不言自成蹊',reading:'<em>今年的关键词是"破圈"。</em>专业能力已到临界点，只需一个舞台。二季度可能有猎头或跨界机会主动找上门——<em>不要被舒适区困住，跨出去有惊喜</em>。创业者四季度是试水好时机，从小规模验证开始。',advice:'宜：跨界尝试 · 展示自己 · 小步快跑'},
+{type:'good',sign:'上签 · 旭日东升',poem:'一轮红日出扶桑\n万里山河尽晓光\n鹏鸟初飞风助力\n青云直上任翱翔',reading:'<em>初入职场或刚转行的你，今年是加速成长之年。</em>学习曲线陡峭但回报丰厚。五六月表现出色会被高层注意到。<em>你的新鲜视角恰好是团队最稀缺的资源</em>。年底有望独当一面。',advice:'宜：大胆提问 · 展现活力 · 快速学习'},
+{type:'good',sign:'上签 · 金榜题名',poem:'寒窗十载一朝成\n金榜题名天下闻\n从此青云平地起\n扶摇直上九霄云',reading:'<em>考证、评职称、竞聘——今年逢考必过。</em>你的努力终于被正式认可。尤其是职称评审或专业认证，通过率极高。<em>不要因为"觉得不够格"而自我设限</em>，大胆报名参加。',advice:'宜：考证评职称 · 报名参赛 · 放手一搏'},
+{type:'good',sign:'上签 · 明珠出海',poem:'骊龙颔下有明珠\n一旦探来万宝俱\n海外机缘休错过\n乘风破浪展宏图',reading:'<em>今年有"涉外"之喜。</em>外企机会、海外项目、跨境电商——与"海"相关的方向都是福地。英语或小语种能力会成为拉开差距的利器。<em>关注国际贸易、出海业务或外资企业</em>。',advice:'宜：关注海外 · 学外语 · 拓展国际视野'},
+{type:'good',sign:'中吉签 · 鲲鹏展翅',poem:'北冥有鱼化鹏飞\n扶摇直上九万里\n长风破浪会有时\n直挂云帆济沧海',reading:'事业呈<em>"先苦后甜"</em>格局。开年初可能遇到变动，看似挫折实为铺垫。三月后形势明朗，<em>长期被低估的某项技能将大放异彩</em>。年底有跳槽涨薪机会。厚积薄发的时刻快到了。',advice:'宜：坚守本心 · 打磨技能 · 等待时机'},
+{type:'good',sign:'中吉签 · 锦上添花',poem:'繁花似锦正当时\n更有东风着意吹\n莫把光阴闲过了\n好将勤苦答明时',reading:'<em>已经在上升通道的你，今年继续加速。</em>去年打下的基础开始产出。年中绩效评估亮眼，年终奖金可超预期。<em>唯一需要警惕的是不要过度乐观</em>——顺境中更要保持日常节奏。',advice:'宜：维持节奏 · 拒绝骄傲 · 善用顺境'},
+{type:'good',sign:'中吉签 · 柳暗花明',poem:'山重水复疑无路\n柳暗花明又一村\n莫向迷津空问渡\n分明大道在前门',reading:'<em>你正站在一个"二选一"的路口</em>——换行业还是深耕？跳槽还是留下？签文告诉你：两条路都通，关键在选一条就坚定走下去。<em>最危险的是站在原地纠结</em>。下半年有贵人出现帮你拨开迷雾。',advice:'宜：果断选择 · 一旦决定不再回头'},
+{type:'good',sign:'中吉签 · 双龙戏珠',poem:'双龙捧出夜明珠\n照破乾坤万象苏\n左右逢源皆助力\n东西南北任君驱',reading:'<em>"左右逢源"的幸运之年。</em>主业之外，副业或兼职收入将有惊喜增长。人际关系网络在快速扩张——<em>今年最优质的资源，都来自你没想到的人</em>。多参加行业交流，多对不同圈子的人自我介绍。',advice:'宜：拓展人脉 · 发展副业 · 广结善缘'},
+{type:'good',sign:'中签 · 紫气东来',poem:'紫气东来漫九天\n三阳开泰运相连\n四时勤奋终须报\n八方财源自在前',reading:'<em>稳中求进，步步为营。</em>不适合激进跳槽或裸辞，但适合在现有岗位上做深做透。上半年埋下的种子秋天结果——<em>十月份前后有一波收获期</em>。考证、进修、学新技能的投入回报率极高。',advice:'宜：深耕专业 · 考证进修 · 稳扎稳打'},
+{type:'good',sign:'中签 · 顺水推舟',poem:'轻舟已过万重山\n从此江陵一日还\n若问前程何处好\n顺流而下即长安',reading:'<em>顺势而为，事半功倍。</em>今年不用太费力，跟着公司或行业的大趋势走就好。行业风口在你这边的话，红利自然会落到你头上。<em>不要逆势硬撑——该转舵时果断转</em>。',advice:'宜：顺从大势 · 借力而行 · 不做逆行者'},
+{type:'good',sign:'中签 · 月照寒潭',poem:'一泓秋水净无尘\n月到天心倍有神\n但得此心常似水\n何愁事业不超群',reading:'<em>"专注"是你今年的超能力。</em>别被各种风口和副业诱惑分散注意力。盯住一个方向打穿打透——<em>一万小时定律将在今年兑现</em>。某个你反复打磨的项目或产品会得到用户认可。',advice:'宜：极度专注 · 拒绝诱惑 · 打穿一个点'},
+{type:'good',sign:'中签 · 鹤立鸡群',poem:'独立苍茫意自闲\n鸡群鹤立更超然\n时人不识凌云木\n直待凌云始道高',reading:'<em>差异化竞争的一年。</em>你和同龄人/同级同事的差距在拉大。不是他们退步了，是你进步太快。<em>你的独立思考能力将成为最大的职场护城河</em>。敢于提不同意见，敢于做别人不敢做的事。',advice:'宜：保持独立判断 · 敢于不同 · 建立壁垒'},
+{type:'good',sign:'中签 · 春燕归巢',poem:'旧时王谢堂前燕\n飞入寻常百姓家\n莫道归来无好景\n新巢筑就胜繁花',reading:'<em>"回归"之年。</em>可能从大厂回流中小企、从外地回到家乡、从激进创业回到稳健就业。这不是退步——<em>把一线经验和视野带回二线，降维打击</em>。你的经验在二三线城市或传统行业有巨大溢价。',advice:'宜：回流二三线 · 降维打击 · 价值兑现'},
+{type:'warn',sign:'中平签 · 潜龙勿用',poem:'龙潜深渊待风云\n且将韬光养精神\n莫羡他人登高处\n时来运转自通津',reading:'今年需要<em>"熬"</em>。不是坏事——而是在蓄力。可能会觉得付出回报不成正比，但这个过程在重塑底层能力。<em>切忌与同事比较晋升速度，那会扰乱你的节奏</em>。二季度低调学习，深秋后局面翻转。',advice:'忌：攀比急躁；宜：沉淀积累 · 秋后发力'},
+{type:'warn',sign:'中平签 · 逆水行舟',poem:'逆水行舟用力撑\n一篙松劲退千寻\n古云此日足可惜\n吾辈更应惜秒阴',reading:'<em>"不进则退"之年。</em>行业竞争加剧，原地踏步等于退步。需要在技能树上至少新增一个硬核能力。<em>拒绝无效社交，把时间花在能产生复利的事情上</em>。上半年的某个错误决策可能在八九月暴露，早发现早补救。',advice:'忌：安于现状；宜：技能升级 · 精简圈子'},
+{type:'warn',sign:'中平签 · 暗潮涌动',poem:'水面无波下有潮\n暗中人事已纷嚣\n小心驶得千年渡\n莫把平川当坦途',reading:'<em>表面平静，底下暗流。</em>公司内部可能有权力洗牌、部门合并或人事地震。你不是风暴中心——但如果站错队会很麻烦。<em>保持中立，做好本职工作</em>。等尘埃落定后，存活者将获得奖励。',advice:'忌：站队表态传闲话；宜：保持中立 · 做好本职'},
+{type:'warn',sign:'中平签 · 泥途困马',poem:'泥深蹄滑马难前\n欲进还停只自怜\n幸有东风来助力\n一朝脱困上平川',reading:'<em>上半年会有一段"卡住"的感觉</em>——项目推不动、领导不回复、客户拖合同。这不是你的问题。用这段停滞期做好内部建设：<em>整理流程、补齐文档、做做规划</em>。六月后阻力消散，积压的事情一口气跑起来。',advice:'忌：焦虑硬推；宜：借空档做内功 · 等待解封'},
+{type:'warn',sign:'中平签 · 独木难支',poem:'一枝难敌万条风\n独木何堪大厦功\n须借众擎方易举\n莫将心事太孤忠',reading:'<em>你太累了——因为什么都自己扛。</em>今年的课题是学会授权和借力。一个人加班到凌晨不如拉两个同事分担。<em>学会说"不"，学会求助，学会把活分出去</em>。否则健康会亮红灯。',advice:'忌：大包大揽；宜：学会授权 · 建立团队'},
+{type:'warn',sign:'中平签 · 风中秉烛',poem:'风中秉烛焰飘摇\n一着差池火便消\n步步为营休冒险\n守成即是上上招',reading:'<em>"守"比"攻"重要。</em>今年最大的风险是冒进。有个看起来很美的机会——签文建议你三思。<em>现有阵地已经足够你深耕</em>。等到明年再扩张不迟。创业者今年先求活，不追求增长数字。',advice:'忌：扩张冒险；宜：守城为主 · 稳住现金流'},
+{type:'warn',sign:'下签 · 风雨行舟',poem:'风雨潇潇夜未央\n孤舟一叶渡寒江\n须防暗礁藏水底\n稳舵方能到岸旁',reading:'今年有<em>一道坎</em>要过，大概率在夏季。可能是团队政治、项目失败或合作破裂。<em>提前做好风险预案和储蓄准备</em>是关键。好消息是撑到九月局面明显好转。重要文件合同务必留存。',advice:'忌：轻信口头承诺；宜：留痕留证 · 做好B计划'},
+{type:'warn',sign:'下签 · 孤雁离群',poem:'失群孤雁叫声哀\n夜半霜寒独自捱\n若问前程何处是\n须从暗处觅灯来',reading:'<em>今年可能遭遇"被孤立"</em>——团队排挤、被边缘化、关键决策不带你。这不是你的错。<em>主动跨部门寻求新圈子，不要把自己困在有毒环境中</em>。年末有转岗或转组机会。',advice:'忌：硬扛孤立；宜：跨部门找盟友 · 准备转岗'},
+{type:'warn',sign:'下签 · 镜花水月',poem:'镜里看花不是真\n水中捉月枉劳神\n劝君莫被虚名误\n脚踏实地是安身',reading:'<em>小心"画大饼"。</em>某个领导或合伙人可能给了你一个看起来很美的承诺——升职、期权、分红——但要到年底才能兑现。<em>不要为了未来的空头支票牺牲当下的实际利益</em>。落袋为安。',advice:'忌：相信画饼；宜：要书面承诺 · 短期兑现优先'},
+{type:'bad',sign:'下下签 · 枯木待春',poem:'枯木寒岩立朔风\n霜欺雪压几多重\n待到冰消雪化后\n一枝新绿报春浓',reading:'今年确实比较艰难。但<em>枯木逢春需要时间——不是死局，是迟来的转机</em>。上半年可能经历裁员、降薪或被迫转行。这不是能力问题，是环境在洗牌。冬天新机会出现。<em>把今年看作一次"重启"</em>。',advice:'忌：自我怀疑；宜：接受变化 · 拥抱新方向'},
+{type:'bad',sign:'下下签 · 困龙在渊',poem:'困龙在渊暗无光\n荆棘丛生道路茫\n劝君莫作等闲看\n小心驶得万年船',reading:'今年走到一个<em>低谷周期</em>。"否极泰来"——离触底反弹只差最后一步。不要在重大财务决策上冒进。<em>少说话多观察，保持绝对中立</em>。健康注意过劳，身体是翻盘的本钱。年底某次"偶然相遇"会带来转机。',advice:'忌：冒进投资站队；宜：保守行事 · 养精蓄锐'},
+{type:'bad',sign:'下下签 · 螳臂当车',poem:'螳螂奋臂欲当车\n力薄何堪任重欤\n且退一步天地阔\n好将韬略再徐徐',reading:'<em>你可能正在打一场注定赢不了的仗。</em>某个项目、客户、岗位——你已投入太多舍不得放弃，但继续只会消耗更多。<em>战略性撤退不是失败，是止损</em>。放下这个，才有手去抓下一个。',advice:'忌：恋战死磕；宜：及时止损 · 转身离开'},
+{type:'bad',sign:'凶签 · 虎落平阳',poem:'虎落平阳被犬欺\n龙游浅水受虾嬉\n劝君且忍心头气\n待到春雷一震时',reading:'<em>今年可能遭遇小人</em>——抢功的同事、PUA的老板、背后捅刀的合作方。正面冲突只会让你受伤。对策是"忍"——不是懦弱，是等待时机。<em>收集证据、保存记录、暗地提升自己</em>。春雷到来时，你已有充足弹药。',advice:'忌：正面冲突撕破脸；宜：暗中收集证据 · 等待翻盘'},
+{type:'bad',sign:'凶签 · 盲人摸象',poem:'盲人摸象各言真\n谁识全形是假身\n万事须从全局看\n莫将偏见误终身',reading:'<em>你看到的信息只是冰山一角。</em>做重大决定前——跳槽、创业、投资——先确保掌握全部信息。尤其警惕"朋友推荐的项目"或"熟人拉的投资"。<em>今年最危险的是信息不对称</em>。多方核实。',advice:'忌：轻信熟人推荐；宜：多方验证 · 全局视角'},
+{type:'bad',sign:'凶签 · 穷猿奔林',poem:'穷猿投林不择枝\n慌忙只恐误多时\n劝君且把心猿锁\n仔细思量再动移',reading:'<em>今年最大的风险是"慌不择路"。</em>如果失业或项目黄了，仓促间可能接下一个更差的坑。不要因为社保断缴或空窗期焦虑就随便入职。<em>宁愿多花两个月找到对的方向</em>。现金流紧张时先做副业过渡。',advice:'忌：慌不择路；宜：冷静规划 · 宁缺毋滥'},
+];
+
+let busy=false;
+
+function shake(){
+  if(busy)return;
+  busy=true;
+
+  const tong=document.getElementById('tong');
+  const result=document.getElementById('result');
+  result.classList.remove('show');
+  result.style.display='none';
+
+  tong.classList.add('shaking');
+
+  setTimeout(()=>{
+    const rect=tong.getBoundingClientRect();
+    const fly=document.createElement('div');fly.className='stick-fly';
+    fly.style.left=(rect.left+rect.width/2-2)+'px';
+    fly.style.top=(rect.top+30)+'px';
+    document.body.appendChild(fly);
+    for(let i=0;i<16;i++){
+      const p=document.createElement('div');p.className='particle';
+      p.style.left=(rect.left+rect.width/2)+'px';
+      p.style.top=(rect.top+20)+'px';
+      p.style.setProperty('--dx',(Math.random()-.5)*200+'px');
+      p.style.setProperty('--dy',(-50-Math.random()*150)+'px');
+      p.style.background='hsl('+(30+Math.random()*20)+',80%,'+(50+Math.random()*30)+'%)';
+      p.style.width=p.style.height=(2+Math.random()*4)+'px';
+      document.body.appendChild(p);
+      setTimeout(()=>p.remove(),800);
+    }
+    setTimeout(()=>fly.remove(),900);
+  },600);
+
+  setTimeout(async ()=>{
+    tong.classList.remove('shaking');
+
+    let lotResult=null;
+
+    if(baziData){
+      const baziStr=baziData.year.gan+baziData.year.zhi+' '+baziData.month.gan+baziData.month.zhi+' '+baziData.day.gan+baziData.day.zhi+' '+baziData.hour.gan+baziData.hour.zhi;
+      const wx=WUXING_MAP[baziData.day.gan];
+      try{
+        const resp=await fetch('/api/fortune',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({name:'有缘人',wuxing:wx,bazi:baziStr,gender:''})
+        });
+        const j=await resp.json();
+        if(j.code===200&&j.data){
+          const d=j.data;
+          lotResult={type:d.level.includes('上')?'good':d.level.includes('下')||d.level.includes('凶')?'bad':'warn',
+            sign:d.sign,poem:d.poem.replace(/\\n/g,'\n'),reading:d.reading,advice:d.advice,ai:true};
+        }
+      }catch(e){console.log('AI fail, fallback');}
+    }
+
+    if(!lotResult){
+      let seed=Math.floor(Math.random()*LOTS.length);
+      if(baziData){var dg=GAN.indexOf(baziData.day.gan);var dz=ZHI.indexOf(baziData.day.zhi);seed=(seed+dg+dz*3)%LOTS.length;}
+      lotResult={type:LOTS[seed].type,sign:LOTS[seed].sign,poem:LOTS[seed].poem,reading:LOTS[seed].reading,advice:LOTS[seed].advice,ai:false};
+    }
+
+    var lot=lotResult;
+
+    var badge=document.getElementById('badge');
+    badge.textContent=lot.ai?'✨ AI':(lot.type==='good'?'吉':lot.type==='warn'?'平':'凶');
+    badge.className='badge '+lot.type;
+
+    document.getElementById('sname').textContent=lot.sign;
+    document.getElementById('poem').textContent=lot.poem;
+    document.getElementById('reading').innerHTML=lot.reading;
+    document.getElementById('advice').textContent=lot.advice;
+
+    var baziDiv=document.getElementById('baziReading');
+    if(baziData&&!lot.ai){
+      baziDiv.innerHTML=baziReading(baziData.day.gan,lot.type);
+      baziDiv.style.display='block';
+    }else{
+      baziDiv.style.display='none';
+    }
+
+    var result=document.getElementById('result');
+    result.style.display='block';
+    requestAnimationFrame(()=>{
+      result.classList.add('show');
+      result.scrollIntoView({behavior:'smooth',block:'center'});
+    });
+
+    document.getElementById('tongWrap').style.display='none';
+    busy=false;
+  },1000);
+}
+
+function backToTong(){
+  var result=document.getElementById('result');
+  result.classList.remove('show');
+  setTimeout(()=>{
+    result.style.display='none';
+    document.getElementById('tongWrap').style.display='block';
+  },400);
+}
+
+(function initSelects(){
+  var ySel=document.getElementById('byear'),mSel=document.getElementById('bmonth'),dSel=document.getElementById('bday');
+  var now=new Date();
+  for(var y=1960;y<=now.getFullYear()-10;y++)ySel.add(new Option(y+'年',y));
+  ySel.value=1990;
+  for(var m=1;m<=12;m++)mSel.add(new Option(m+'月',m));
+  function fillDays(){
+    var y2=parseInt(ySel.value)||2000;var m2=parseInt(mSel.value)||1;
+    var cnt=new Date(y2,m2,0).getDate();
+    dSel.innerHTML='';
+    for(var d=1;d<=cnt;d++)dSel.add(new Option(d+'日',d));
+  }
+  function tryCalc(){if(ySel.value&&mSel.value&&dSel.value)calcBazi();}
+  ySel.onchange=function(){fillDays();tryCalc();};
+  mSel.onchange=function(){fillDays();tryCalc();};
+  dSel.onchange=tryCalc;
+  document.getElementById('bhour').onchange=tryCalc;
+  mSel.value=6;fillDays();dSel.value=15;
+  setTimeout(tryCalc,100);
+})();
+</script>
+</body>
+</html>

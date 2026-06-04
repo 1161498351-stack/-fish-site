@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>🐢 海龟汤 · 推理游戏</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0d0d1a;color:#c0b090;font-family:'STSong','Songti SC','Noto Serif SC',serif;
+  display:flex;justify-content:center;align-items:center;min-height:100vh}
+.c{max-width:520px;width:100%;padding:20px;text-align:center}
+h1{font-size:36px;letter-spacing:6px;margin-bottom:4px;color:#e0c080}
+.tip-bar{font-size:11px;color:#444;letter-spacing:2px;margin-bottom:28px}
+
+.card{background:#14142a;border:1px solid #2a2a40;border-radius:16px;padding:28px 22px;margin-bottom:16px;position:relative}
+.card .num{font-size:10px;color:#3a3a50;letter-spacing:2px;margin-bottom:10px}
+.card .soup{font-size:17px;line-height:1.9;color:#d0c0a0;margin-bottom:20px;text-align:left}
+
+.hint-btn{background:transparent;border:1px solid #3a3040;color:#706050;font-family:inherit;
+  font-size:12px;padding:6px 16px;border-radius:14px;cursor:pointer;letter-spacing:2px;transition:.2s}
+.hint-btn:hover{border-color:#806050;color:#b09070}
+.hint-box{display:none;background:rgba(40,30,20,.5);border:1px solid #3a3020;border-radius:10px;
+  padding:14px 16px;margin-top:12px;text-align:left;font-size:13px;color:#908060;line-height:1.8}
+.hint-box.show{display:block}
+
+.reveal-btn{display:block;width:100%;margin-top:16px;padding:12px;background:linear-gradient(135deg,#2a1a1a,#1a0a0a);
+  border:1px solid #4a2020;color:#c07070;font-family:inherit;font-size:14px;border-radius:10px;
+  cursor:pointer;letter-spacing:3px;transition:.2s}
+.reveal-btn:hover{background:linear-gradient(135deg,#3a2020,#2a1010);border-color:#6a3030}
+.answer{display:none;background:rgba(30,10,10,.6);border:1px solid #4a2020;border-radius:12px;
+  padding:18px 16px;margin-top:12px;text-align:left;font-size:14px;color:#d0a090;line-height:1.9}
+.answer.show{display:block}
+.answer em{color:#ffb800;font-style:normal}
+
+.btns{display:flex;gap:10px;margin-top:20px}
+.btns button{flex:1;padding:12px;background:#14142a;border:1px solid #2a2a40;color:#706050;
+  font-family:inherit;font-size:14px;border-radius:10px;cursor:pointer;letter-spacing:2px;transition:.2s}
+.btns button:hover{border-color:#605040;color:#c0a080}
+.btns button.primary{background:#1a1a30;border-color:#3a3050;color:#9080b0}
+.btns button.primary:hover{border-color:#5a5080;color:#b0a0d0}
+
+.count{font-size:11px;color:#333;margin-top:16px}
+.about{font-size:13px;color:#c0a080;line-height:2;text-align:left;padding:20px}
+.about b{color:#e0c080}
+</style>
+</head>
+<body>
+<div class="c">
+  <h1>🐢 海 龟 汤</h1>
+  <p class="tip-bar">—— 根据汤面推理真相，随时揭晓汤底 ——</p>
+
+  <div class="card" id="card">
+    <div class="num" id="num"></div>
+    <div class="soup" id="soup"></div>
+    <button class="hint-btn" id="hintBtn" onclick="showHint()">💡 提示</button>
+    <div class="hint-box" id="hintBox"></div>
+    <button class="reveal-btn" onclick="reveal()">🔍 揭晓汤底</button>
+    <div class="answer" id="answer"></div>
+  </div>
+
+  <div class="btns">
+    <button onclick="prev()">⬅ 上一碗</button>
+    <button onclick="randomSoup()">🎲 随机</button>
+    <button onclick="next()">下一碗 ➡</button>
+  </div>
+
+  <p class="count" id="count"></p>
+</div>
+
+<script>
+const SOUPS = [
+{
+  soup:'男人走进一家酒吧，点了一杯水。\n酒保看了他一眼，突然从柜台下掏出一把枪指着他的头。\n男人愣了几秒，然后说了一句"谢谢"，付了水钱就走了。',
+  hint:'男人进酒吧之前身体有一个小毛病。水是治这个毛病的，枪也是。',
+  answer:'男人一直在<em>打嗝</em>，打嗝不止。他听说喝水可以治打嗝，就走进酒吧要了杯水。酒保看出他在打嗝，突然掏枪吓他——<em>惊吓是治疗打嗝的偏方</em>。男人被吓后打嗝果然停了，所以他说"谢谢"，付钱离开。'
+},{
+  soup:'沙漠里发现一具男尸，全身赤裸，脸朝下趴在地上。\n尸体旁边有半根用过的火柴。\n除此之外方圆几十公里没有任何痕迹。',
+  hint:'他不是一个人来到沙漠的。那半根火柴关乎生死抉择。',
+  answer:'男人和几个朋友乘坐<em>热气球</em>旅行。途中热气球超重，大家决定<em>抽火柴决定谁跳下去</em>。最短的那根火柴就是"中奖"。男人抽到了半根——他已经折断了但发现别人抽到的更短，所以他没跳。但后来其他人陆续抽到短火柴跳下去，<em>最后只剩他一个人无法操控热气球</em>，最终坠毁在沙漠中。他临死前脱掉衣服想做成求救旗帜，但失败了。'
+},{
+  soup:'男人半夜醒来，发现身边躺着一具冰冷的尸体。\n他毫不犹豫地把尸体抱起来，打开窗户，扔了出去。\n然后继续睡觉了。警察第二天来敲门，他坦然开门。',
+  hint:'尸体不是人。男人也不是凶手。窗户外面是哪里？',
+  answer:'男人住在<em>二楼公寓</em>，楼下是<em>垃圾收集区</em>。他半夜醒来发现床上有一只<em>死老鼠</em>（他的猫叼上来的）。他抓起死老鼠从窗户扔进楼下的垃圾桶，然后继续睡觉。警察第二天来敲门是因为邻居投诉他半夜开窗噪音，与尸体无关。'
+},{
+  soup:'一个女人去参加母亲的葬礼。\n葬礼上她看到了一个让她一见钟情的男人。\n一周后，她杀死了自己的姐姐。',
+  hint:'她杀姐姐的动机和那个男人有关。她想再见到他。',
+  answer:'女人在葬礼上对那个男人一见钟情，但不知道他是谁、怎么联系。她认为<em>既然葬礼上能见到他，那再来一场葬礼就能再见</em>。于是她杀了姐姐，希望在姐姐的葬礼上再次见到那个男人。这题的经典程度让它成为了一个心理学测试问题——<em>如果你的回答和标准答案一样，你可能具有反社会人格倾向</em>。'
+},{
+  soup:'男人在房间里上吊自杀了。\n房间门窗反锁，没有外人进入的痕迹。\n地上只有一滩水和一些碎玻璃。',
+  hint:'那滩水在男人死之前是固体。他踩在那个固体上面。',
+  answer:'男人踩在一大块<em>冰块</em>上上吊。冰块融化后变成一滩水，<em>支撑物消失，他悬空而死</em>。碎玻璃是冰块融化后露出来的——原来是装冰的容器。这是伪装成密室的<em>自杀</em>。'
+},{
+  soup:'清晨，一具男尸躺在草地上，周围散落着几十个高尔夫球。\n男人的后脑勺有一个致命的大包。\n现场没有发现任何凶器。',
+  hint:'凶器就在现场，但警察看不到——因为它在天上。',
+  answer:'男人是高尔夫球场的<em>捡球员</em>。他每天清晨开着小车在球场上捡高尔夫球。那天他的车坏了，决定<em>步行去捡</em>。一个球手远远开球，<em>高尔夫球高速飞行击中了男人的后脑</em>（高尔夫球是最致命的运动物品之一），当场毙命。球落到了草地上，和其他球混在一起。'
+},{
+  soup:'一个男人走进餐厅，点了一份海龟汤。\n他喝了一口，问服务员："这是真的海龟肉吗？"\n服务员说"是的"。\n男人走出餐厅，开枪自杀了。',
+  hint:'男人之前经历过一次海难。他在海上漂了很久才获救。',
+  answer:'多年前，男人和几个朋友乘船遇难，在救生筏上漂流了很久。食物耗尽后，<em>朋友用自己的肉煮了一锅"海龟汤"骗他喝下</em>，才让他活了下来。今天他喝到真正的海龟汤，尝出了味道完全不同——<em>他意识到当年喝的是朋友的肉</em>。无法承受这个真相，他自杀了。'
+},{
+  soup:'老人在自己的家里死了。\n法医鉴定死因是头部遭到重击。\n凶器就在老人身边——一根拐杖。\n但老人不是被人杀的，也没有自杀。',
+  hint:'拐杖不是用来打人的凶器，而是导致摔跤的原因。',
+  answer:'老人腿脚不好，平时用拐杖走路。那天他在家里走路时，<em>拐杖不小心卡在地板缝隙中</em>，拐杖没有随着他的步伐移动，<em>导致他失去平衡摔倒</em>。倒下时后脑勺撞到了地板/桌角，头部重击致死。拐杖是"导致死亡的工具"而非主动凶器。'
+},{
+  soup:'两兄弟在沙漠里开车旅行。\n车坏了，两人决定分头行动。哥哥向东走，弟弟向西走。\n三天后哥哥获救了，但搜救队在西边找到了弟弟——他死在一个破旧的小木屋里。\n木屋里什么都没有，只有一个空冰箱。',
+  hint:'弟弟在冰箱里留了东西——但救援队打开时是空的。什么东西从冰箱里消失了？',
+  answer:'弟弟找到了一个破旧木屋，里面有冰箱。他<em>把自己的水和食物放进冰箱，锁上了门</em>（以为冰箱能保鲜）。然后他在木屋里等救援。<em>沙漠高温让冰箱变成了烤箱</em>，食物腐烂、水蒸发。弟弟因为把补给锁进了一个"烤箱"而<em>渴死</em>了。救援队打开冰箱时里面的东西早已腐烂蒸发。'
+},{
+  soup:'一个女人在酒店房间里死了。\n房间里有一张床、一个衣柜、一个行李箱。\n死因是窒息。现场没有打斗痕迹，也没有凶手进入的迹象。\n警察看了十分钟，锁定了凶手。',
+  hint:'凶手就是报案人——女人的丈夫。凶器在行李箱里。',
+  answer:'女人和丈夫入住酒店。丈夫趁她睡觉时，<em>从行李箱里取出行李箱的内衬袋</em>，套在她头上窒息而亡。因为是软质物品，没有明显外伤。警察发现行李箱拉链处少了内衬，而内衬上应该有序列号/品牌标签与行李箱匹配，由此锁定。'
+},{
+  soup:'男孩在家里的床上醒来，发现父母都死了。\n他看了看窗外的院子，立刻明白了一切，开始放声大哭。\n院子里的雪地上有三行脚印——但只有他父母的。',
+  hint:'男孩是被人抱回来的。抱他的人没有留下脚印。',
+  answer:'男孩天生<em>盲人</em>，一直靠听觉生活。那天夜里下大雪，家里发生火灾，父母把他<em>从窗户扔到院子的雪堆上救了他</em>，自己没来得及逃生。男孩摔在雪地里昏了过去，被邻居发现抱回了床上。他醒来后发现父母死了，而院子里只有父母的脚印（走向窗户救他），没有邻居抱他回去的脚印（因为<em>他醒来后恢复了视力</em>——摔落时的撞击意外治好了他的失明，但他为时已晚地"看到"了真相）。'
+},{
+  soup:'男人每天晚上都会醒来，打开冰箱门，对着里面发呆。\n第二天早上他完全不记得这件事。\n但他拒绝去看医生。',
+  hint:'冰箱里有什么东西能让他活下去？',
+  answer:'男人有<em>严重的梦游症</em>。他每天晚上梦游到厨房，打开冰箱吃东西——这是他唯一能在梦游中完成的行为。<em>他靠梦游吃饭</em>。如果他去看医生治好了梦游，他会在睡梦中饿死。所以他选择不去治疗。'
+},{
+  soup:'一个女人报警说丈夫失踪了。\n警察来她家调查，注意到客厅里有一个大鱼缸，里面有十几条金鱼。\n警察盯着鱼缸看了几分钟，然后逮捕了妻子。',
+  hint:'鱼缸里的水不是普通的水。金鱼很特别——它们"吃"了什么。',
+  answer:'妻子杀了丈夫后用<em>强酸</em>溶解了尸体。但酸液处理不掉骨头中的<em>钙质和金属</em>。她把剩余的酸液倒进鱼缸<em>企图用鱼来掩盖</em>。警察注意到金鱼的游动状态异常，而且鱼缸底部有<em>异常沉淀物</em>——经过化验发现了丈夫的DNA残留和骨骼碎片。'
+},{
+  soup:'音乐家在台上演奏完毕，观众热烈鼓掌。\n他回到后台，几分钟后被人发现死在了化妆间。\n死因是中毒。警方调查后认定是自杀。',
+  hint:'毒不是在后台下的，是在演奏过程中。他用自己的乐器毒死了自己。',
+  answer:'音乐家是<em>吹笛子/管乐器</em>的。他在演出前<em>把毒药涂在了笛子的吹口内侧</em>。演奏时唾液和呼吸让毒药缓释进入口腔，一曲终了后回到后台，毒发身亡。因为毒药入口的方式极其隐蔽且无法被他人操作，加上遗书，警方认定为自杀。'
+},{
+  soup:'一个男人去深山打猎。\n三天后他的尸体被找到，全身没有外伤。\n死因是内脏破裂导致的大出血。\n现场没有发现任何武器，也没有别人的脚印。',
+  hint:'男人是被"自己"杀死的。他的身体和树之间发生了什么。',
+  answer:'男人在深山里追猎物时，<em>从高处坠落</em>。坠落过程中<em>腹部撞断了一根粗树枝</em>，树枝插进了他的腹腔。他忍着剧痛把树枝拔了出来，<em>树枝没有留在体内</em>，所以表面看不到外伤。但拔出的动作导致了更严重的<em>内脏破裂和内出血</em>。他走了几百米后倒下，失血过多而死。搜救队看到的只是完整尸体，没有凶器。'
+},{
+  soup:'考古队在一座古墓中发现了一具白骨。\n白骨的手里握着一把钥匙。\n白骨旁边还有一具白骨，手里什么也没有。\n考古队队长看了三秒，说："这是个密室杀人案，凶手就是旁边这具白骨。"',
+  hint:'钥匙能打开什么东西？为什么一具白骨有钥匙，另一具没有？',
+  answer:'两个人被<em>同时</em>关进了古墓的密室里。他们把唯一的<em>钥匙</em>放在一个人的手里。然后两个人开始<em>决斗</em>——赢的人拿走钥匙开门出去。结果两个人<em>势均力敌，双双力竭而死</em>。有钥匙的那个人死的时候钥匙还攥在手里，旁边那个是和他战斗到最后的"对手"。队长一眼看穿：如果是一起被困死的，不会一个人握着钥匙。'
+},{
+  soup:'一个女孩每天放学都会经过一座桥。\n这天她经过时，看到一个男人站在桥边。\n男人对她说了一句话。女孩听完后，转身跑回家，从此再也没有走过那座桥。',
+  hint:'男人说了一句只有"凶手"才知道的信息。女孩意识到了什么。',
+  answer:'三年前，女孩的姐姐在那座桥上被人推下河淹死了。凶手一直没找到。男人对女孩说：<em>"你长得和你姐姐一模一样——连害怕的表情都一样。"</em>女孩瞬间意识到这个男人就是当年杀害姐姐的凶手，因为他知道姐姐<em>临死前"害怕的表情"</em>。女孩逃跑并报警。'
+},{
+  soup:'一个男人坐在电影院里看电影。\n正看到一半，他突然站起来，走到前排，对着一个陌生人的后脑勺狠狠打了一拳。\n全场哗然。但被打的人回头一看，不但没生气，反而紧紧拥抱了这个男人。',
+  hint:'男人是盲人，刚刚恢复了视力。他在找一个人。',
+  answer:'男人之前在一次事故中<em>失明了</em>。经过多年的治疗，终于做了手术<em>恢复视力</em>。他的主治医生告诉他手术后可以去正常生活了，但他不知道医生长什么样。他在电影院里看电影时，听到前排有人在小声说话，<em>认出了这个声音</em>——就是他的主治医生。他太激动了，"打"其实是拍肩膀，只是因为刚恢复视力距离判断不准，拍重了。医生回头看到是自己治好的人，高兴地拥抱了他。'
+},{
+  soup:'一个房间里有三盏白炽灯。灯在你身后的房间里，你看不到它们。\n门外有三个开关，每个控制其中一盏灯。\n你只能从开关房间走到灯房间一次，不能走回来。\n你怎么确定每个开关对应哪盏灯？',
+  hint:'白炽灯会发热。利用温度来区分。',
+  answer:'<em>先打开开关A，等十分钟</em>，让它对应的灯泡充分发热。<em>然后关闭开关A，打开开关B</em>。<em>立即走到灯房间</em>：<em>亮着的那盏对应开关B</em>；<em>摸一下两盏灭着的灯：热的那盏对应开关A</em>（它刚刚被关了），冷的那盏对应开关C（从没开过）。'
+},{
+  soup:'男人在网上买了一本书。\n快递送到后，他打开包裹，翻开第一页。\n一分钟后，他打电话给警察，说："我被威胁了。"\n警察来了以后，翻看了那本书，认同了他的说法。',
+  hint:'这本书的内容没问题。威胁信息不在书的内容里，而在——书的"身份"上。',
+  answer:'男人根本就没有买这本书。<em>包裹里是一本关于如何应对跟踪狂的书</em>。一个陌生人把这本书寄给了他——<em>意思就是"我在跟踪你，你要小心了"</em>。这本书的存在本身就是威胁信息。警察查了购买记录，确认非他本人购买，发货地址也是假的。'
+},{
+  soup:'男人来到一个荒岛上。\n岛上有一个小木屋，木屋里有一具白骨和一张纸。\n纸上写着："我已经在这里等了十年。今天我终于可以走了。再见。"\n纸上没有日期。但男人读完立刻明白了：写纸的人根本没有离开这个岛。',
+  hint:'写纸的人"走了"不是指离开岛。木屋里只有一个出口。',
+  answer:'白骨就是写纸的人。<em>他等了十年等不到救援，写完这张纸条后自杀了</em>。"可以走了"不是离开了岛，而是<em>离开了人间</em>。男人看到白骨和纸条，自然明白写纸的人"走"的方式。'
+},{
+  soup:'妈妈给了小明一个空盘子，让他去厨房的冷冻柜里拿冰。\n小明去了很久没回来。妈妈去厨房一看——小明死了。\n死因是头部遭到撞击。冷冻柜的门开着，里面的灯亮着。\n凶手不是妈妈，也没有外人入侵。',
+  hint:'小明没有够到冷冻柜。他需要踩着什么东西。',
+  answer:'冷冻柜在厨房的<em>高处</em>，小明个子矮够不着。他搬来一个小板凳踩着去开冷冻柜。拿冰时<em>一块大冰块滑出来</em>，砸中他的头部。他从小板凳上摔下来，头部撞到地面。地上的冰块已经融化，所以现场只有一滩水。冷冻柜的门还开着，灯还亮着。'
+},{
+  soup:'一间密室里发现了一具尸体，死因是背部中刀。\n密室唯一的门从里面反锁。唯一的窗户离地三米，窗外是悬崖。\n房间正中央的地上有一个冰锥的印记。\n警方宣布：这是一起自杀案。',
+  hint:'刀是怎么固定到能让死者自己撞上去的？',
+  answer:'死者把刀<em>刀柄插进一大块冰里</em>，刀刃朝上固定住。然后他背对着冰，<em>用力向后倒下</em>，让刀刃刺入背部。冰融化后消失，只留下一滩水和冰锥印记。密室、无他杀痕迹、冰锥印记——综合判断为精心设计的自杀。'
+},{
+  soup:'一个男人每天早上坐同一班火车上班。\n他总是坐在最后一节车厢的最右边靠窗位置。\n这天他坐到一半，突然站起来，换到了前一节车厢。\n三分钟后，他之前坐的那节车厢脱轨坠入了峡谷，无人生还。',
+  hint:'男人没有预知能力。他的换座理由和"看风景"有关。',
+  answer:'男人一直坐在右边靠窗座位，因为那里<em>可以看到一座山上的一棵大树</em>。他每天都会在火车经过时看那棵树。这天他发现<em>树不见了——被砍掉了</em>。没了风景可看，他换到了前一节车厢找别的风景。三分钟后那节车厢坠崖。砍树的人无心救了他一命。'
+},{
+  soup:'探险家独自进入一个从未被探索过的洞穴。\n他在洞穴深处发现了一具穿着现代登山服的尸体。\n尸体的口袋里有一张纸条，上面写着："你也会死在这里。"\n警方调查后发现尸体是一个月前失踪的探险家。洞穴在他死后才被地震震开入口。',
+  hint:'纸条确实是死者写的——但不是给后来的人看的。是他自己留的遗言。',
+  answer:'一个月前的探险家从<em>另一个入口</em>进入洞穴，那个入口在他进入后塌方封死了。他被困在洞穴里，食物和水耗尽，临死前写下纸条——<em>他相信自己会被困死在洞穴中，"你也会死在这里"是指后来探索洞穴的人也会像他一样被困</em>。一个月后，地震震开了我们现在看到的这个新入口。纸条上的"你"是一种<em>绝望的预言</em>，而非针对具体的人。'
+}];
+
+let idx=0;
+
+function load(i){
+  idx=(i+SOUPS.length)%SOUPS.length;
+  const s=SOUPS[idx];
+  G('num').textContent='第 '+(idx+1)+' 碗 / 共 '+SOUPS.length+' 碗';
+  G('soup').textContent=s.soup;
+  G('hintBox').textContent=s.hint;
+  G('hintBox').classList.remove('show');
+  G('hintBtn').textContent='💡 提示';
+  G('answer').textContent=s.answer;
+  G('answer').classList.remove('show');
+  G('count').textContent=(idx+1)+' / '+SOUPS.length;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function showHint(){G('hintBox').classList.toggle('show');G('hintBtn').textContent=G('hintBox').classList.contains('show')?'🫣 隐藏提示':'💡 提示';}
+function reveal(){G('answer').classList.add('show');}
+function prev(){load(idx-1)}
+function next(){load(idx+1)}
+function randomSoup(){load(Math.floor(Math.random()*SOUPS.length))}
+function G(id){return document.getElementById(id)}
+
+load(0);
+</script>
+</body>
+</html>

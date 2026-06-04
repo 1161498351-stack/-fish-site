@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>工作总结.docx - Word</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%232563EB'/><rect x='7' y='4' width='18' height='22' rx='2' fill='white'/><rect x='10' y='8' width='12' height='2' rx='1' fill='%23D0D5DD'/><rect x='10' y='12' width='12' height='2' rx='1' fill='%23D0D5DD'/><rect x='10' y='16' width='8' height='2' rx='1' fill='%23D0D5DD'/><path d='M19 24 Q22 22 24 24 Q22 26 19 24Z' fill='%232563EB' opacity='0.6'/></svg>">
+<style>
+:root{
+  --bg-app:#e8eaed;--bg-ribbon:#f0f2f5;--bg-paper:#fff;--border:#d9d9d9;
+  --text:#1a1a1a;--text-secondary:#5b5b5b;--text-muted:#8a8a8a;
+  --blue:#2563eb;--blue-hover:#1d4ed8;
+  --shadow-paper:0 2px 8px rgba(0,0,0,.08),0 4px 24px rgba(0,0,0,.06);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:var(--bg-app);font-family:'Microsoft YaHei','PingFang SC','Segoe UI',Arial,sans-serif;
+  color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden;
+  -webkit-font-smoothing:antialiased;user-select:none;
+}
+
+/* ═══════ 标题栏 ═══════ */
+.title-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  background:#2563eb;color:#fff;padding:0 12px;height:32px;flex-shrink:0;font-size:12px;
+}
+.title-bar .tb-center{font-size:11px;opacity:.9}
+.title-bar .tb-btn{width:28px;height:24px;border:none;background:transparent;color:#fff;
+  border-radius:4px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
+.title-bar .tb-btn:hover{background:rgba(255,255,255,.15)}
+.title-bar .tb-btn.close:hover{background:#e81123}
+
+/* ═══════ 菜单栏 ═══════ */
+.menu-bar{
+  display:flex;align-items:center;background:#f0f2f5;border-bottom:1px solid var(--border);
+  padding:0 4px;height:26px;flex-shrink:0;
+}
+.menu-bar span.mi{padding:4px 10px;font-size:12px;color:var(--text-secondary);cursor:pointer;
+  border-radius:3px;letter-spacing:.5px}
+.menu-bar span.mi:hover{background:#e0e3e8}
+.menu-bar .fish-entry{
+  margin-left:auto;padding:4px 12px;font-size:12px;color:var(--blue);cursor:pointer;
+  border-radius:3px;display:flex;align-items:center;gap:4px;border:1px solid transparent;
+}
+.menu-bar .fish-entry:hover{background:#eff6ff;border-color:var(--blue)}
+.menu-bar .fish-entry.active{background:var(--blue);color:#fff}
+
+/* ═══════ 功能区 ═══════ */
+.ribbon{
+  background:var(--bg-ribbon);border-bottom:1px solid var(--border);
+  padding:6px 8px;flex-shrink:0;display:flex;gap:2px;align-items:center;
+}
+.ribbon-group{display:flex;flex-direction:column;align-items:center;padding:2px 8px;gap:2px;cursor:default}
+.ribbon-group .rg-label{font-size:9px;color:var(--text-muted);letter-spacing:.5px}
+.ribbon-group .rg-btns{display:flex;gap:1px}
+.ribbon-btn{
+  width:26px;height:22px;border:none;background:transparent;border-radius:3px;
+  cursor:pointer;font-size:12px;color:var(--text-secondary);display:flex;
+  align-items:center;justify-content:center;
+}
+.ribbon-btn:hover{background:#e0e3e8}.ribbon-btn.active{background:#d3e0fd;color:var(--blue)}
+.ribbon-sep{width:1px;height:22px;background:var(--border);margin:0 4px}
+
+/* ═══════ 文档区 ═══════ */
+.doc-area{
+  flex:1;overflow-y:auto;padding:24px 0;display:flex;justify-content:center;
+  background:linear-gradient(180deg,#d5d8dc 0%,#e8eaed 30%,#e8eaed 100%);
+}
+.doc-page{
+  width:720px;min-height:fit-content;background:var(--bg-paper);
+  box-shadow:var(--shadow-paper);padding:72px 80px;transition:padding .3s;
+}
+.doc-page.sidebar-open{padding:48px 60px;width:660px}
+
+/* 工作文档 */
+.doc-content{line-height:2;font-size:15px;color:#333}
+.doc-content h2{font-size:22px;text-align:center;margin-bottom:24px;font-weight:700}
+.doc-content h3{font-size:16px;margin:20px 0 10px;font-weight:700}
+.doc-content p{text-indent:2em;margin-bottom:8px}
+.doc-content .date{text-align:right;color:var(--text-muted);font-size:13px;margin-bottom:20px}
+.doc-content ul{margin:8px 0 8px 2em}
+
+/* ═══════ 摸鱼侧边栏 ═══════ */
+.fish-panel{
+  position:fixed;right:-340px;top:58px;bottom:22px;width:320px;
+  background:#fff;box-shadow:-2px 0 20px rgba(0,0,0,.12);z-index:100;
+  transition:right .3s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;
+  border:1px solid var(--border);border-right:none;border-radius:8px 0 0 8px;
+}
+.fish-panel.show{right:0}
+.fish-panel .fp-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 16px;border-bottom:1px solid var(--border);
+  font-size:13px;font-weight:600;color:var(--text-secondary);background:#fafbfc;
+  border-radius:8px 0 0 0;
+}
+.fish-panel .fp-close{
+  width:26px;height:26px;border:none;background:transparent;cursor:pointer;
+  font-size:16px;color:var(--text-muted);border-radius:4px;display:flex;
+  align-items:center;justify-content:center;
+}
+.fish-panel .fp-close:hover{background:#e8eaed}
+.fish-panel .fp-tabs{
+  display:flex;border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.fish-panel .fp-tab{
+  flex:1;padding:10px 0;border:none;background:transparent;cursor:pointer;
+  font-size:12px;color:var(--text-secondary);border-bottom:2px solid transparent;
+  font-family:inherit;
+}
+.fish-panel .fp-tab.on{color:var(--blue);border-bottom-color:var(--blue);font-weight:600}
+.fish-panel .fp-tab:hover{color:var(--blue)}
+.fish-panel .fp-body{flex:1;overflow-y:auto;padding:16px}
+
+/* ═══════ AI写小说面板 ═══════ */
+.cowrite-wrap{display:flex;flex-direction:column;gap:12px;height:100%}
+.cowrite-wrap label{font-size:11px;color:#888;letter-spacing:1px;display:block;margin-bottom:2px}
+.cowrite-wrap input,.cowrite-wrap select,.cowrite-wrap textarea{
+  width:100%;padding:8px 10px;border:1px solid #d9d9d9;border-radius:6px;
+  font-size:13px;font-family:inherit;outline:none;background:#fafbfc;color:#333;
+  transition:border-color .15s;
+}
+.cowrite-wrap input:focus,.cowrite-wrap select:focus,.cowrite-wrap textarea:focus{
+  border-color:var(--blue);background:#fff;
+}
+.cw-story-box{
+  flex:1;overflow-y:auto;background:#f8f8f8;border:1px solid #e5e5e5;
+  border-radius:6px;padding:12px;font-size:12px;line-height:2;color:#555;
+  white-space:pre-wrap;min-height:140px;max-height:300px;
+}
+.cw-story-box:empty::after{content:'👆 在上面输入你的开头，然后点「AI 续写」';color:#ccc;font-style:italic}
+.cw-input-row{display:flex;gap:8px}
+.cw-input-row textarea{flex:1;min-height:60px;resize:none}
+.cw-btn-row{display:flex;gap:8px}
+.cw-btn{
+  padding:10px 16px;border-radius:6px;border:1px solid #d9d9d9;background:#fff;
+  cursor:pointer;font-size:12px;font-family:inherit;transition:all .15s;
+}
+.cw-btn.ai-btn{
+  flex:1;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;
+  border-color:transparent;font-weight:600;letter-spacing:1px;font-size:13px;
+}
+.cw-btn.ai-btn:hover{box-shadow:0 4px 12px rgba(37,99,235,.3);transform:translateY(-1px)}
+.cw-btn.ai-btn:disabled{opacity:.5;pointer-events:none;transform:none}
+.cw-btn.reset-btn{color:#999;font-size:11px;flex-shrink:0}
+.cw-btn.reset-btn:hover{color:#e44;border-color:#e44}
+.cw-status{font-size:11px;color:#888;text-align:center;min-height:18px;line-height:18px}
+.cw-status.typing{color:var(--blue);animation:pulse2 1s infinite}
+@keyframes pulse2{50%{opacity:.5}}
+
+/* ═══════ 状态栏 ═══════ */
+.status-bar{
+  display:flex;align-items:center;background:#f0f2f5;border-top:1px solid var(--border);
+  padding:0 12px;height:22px;flex-shrink:0;font-size:11px;color:var(--text-muted);gap:16px;
+}
+.status-bar .sb-spacer{flex:1}
+.status-bar .sb-zoom{display:flex;align-items:center;gap:4px}
+.status-bar .sb-zoom input[type=range]{width:80px;height:3px;cursor:pointer}
+
+/* ═══════ Toast ═══════ */
+.toast{
+  position:fixed;bottom:40px;left:50%;transform:translateX(-50%);z-index:999;
+  background:#333;color:#fff;padding:8px 20px;border-radius:20px;font-size:12px;
+  pointer-events:none;opacity:0;transition:opacity .25s;
+}
+.toast.show{opacity:1}
+
+@media(max-width:800px){
+  .doc-page{width:100%;padding:40px 24px}
+  .doc-page.sidebar-open{padding:32px 20px;width:100%}
+  .fish-panel{width:280px}
+}
+</style>
+</head>
+<body>
+
+<!-- 标题栏 -->
+<div class="title-bar">
+  <div><span style="font-size:14px">📄</span></div>
+  <div class="tb-center" id="modeText">认真模式</div>
+  <div class="tb-right">
+    <button class="tb-btn">─</button>
+    <button class="tb-btn">□</button>
+    <button class="tb-btn close">✕</button>
+  </div>
+</div>
+
+<!-- 菜单栏 -->
+<div class="menu-bar">
+  <span class="mi">文件</span><span class="mi">开始</span><span class="mi">插入</span>
+  <span class="mi">设计</span><span class="mi">布局</span><span class="mi">引用</span>
+  <span class="mi">审阅</span><span class="mi">视图</span>
+  <span class="fish-entry" id="fishBtn" onclick="togglePanel()" title="Ctrl+B">✨ AI 写小说</span>
+</div>
+
+<!-- 功能区 -->
+<div class="ribbon">
+  <div class="ribbon-group"><div class="rg-label">剪贴板</div><div class="rg-btns"><button class="ribbon-btn">📋</button></div></div>
+  <div class="ribbon-sep"></div>
+  <div class="ribbon-group"><div class="rg-label">字体</div><div class="rg-btns"><button class="ribbon-btn active" style="font-weight:700">B</button><button class="ribbon-btn" style="font-style:italic">I</button><button class="ribbon-btn" style="text-decoration:underline">U</button></div></div>
+  <div class="ribbon-sep"></div>
+  <div class="ribbon-group"><div class="rg-label">段落</div><div class="rg-btns"><button class="ribbon-btn">≡</button><button class="ribbon-btn">≡</button><button class="ribbon-btn">•</button></div></div>
+  <div class="ribbon-sep"></div>
+  <div class="ribbon-group"><div class="rg-label">样式</div><div class="rg-btns"><button class="ribbon-btn active">标题1</button><button class="ribbon-btn">正文</button></div></div>
+  <div class="ribbon-sep"></div>
+  <div class="ribbon-group" style="cursor:pointer" onclick="togglePanel()" title="Ctrl+B"><div class="rg-label" style="color:#2563eb">✨ AI创作</div></div>
+</div>
+
+<!-- 文档区 -->
+<div class="doc-area" id="docArea">
+  <div class="doc-page" id="docPage">
+    <div class="doc-content" id="docContent"></div>
+  </div>
+</div>
+
+<!-- 摸鱼侧边栏 -->
+<div class="fish-panel" id="fishPanel">
+  <div class="fp-header">
+    <span id="fpTitle">✨ AI 共创小说</span>
+    <button class="fp-close" onclick="togglePanel()" title="关闭 Esc">✕</button>
+  </div>
+  <div class="fp-tabs">
+    <button class="fp-tab on" data-tab="cowrite" onclick="switchTab('cowrite')">✍️ 共创写作</button>
+    <button class="fp-tab" data-tab="doc" onclick="switchTab('doc')">📄 工作文档</button>
+  </div>
+  <div class="fp-body" id="fpBody"></div>
+</div>
+
+<!-- 状态栏 -->
+<div class="status-bar">
+  <span>第 1 页，共 1 页</span>
+  <span id="sbWords">0 字</span>
+  <span class="sb-spacer"></span>
+  <span id="sbFishHint" style="color:#2563eb;opacity:0">✨ AI创作中</span>
+  <span class="sb-spacer"></span>
+  <span>中文(中国)</span>
+  <span class="sb-zoom">
+    <input type="range" min="80" max="150" value="100" id="zoomSlider" oninput="doZoom(this.value)">
+    <span style="font-size:11px;width:36px;text-align:center" id="zoomLabel">100%</span>
+  </span>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var $=function(id){return document.getElementById(id)};
+var panelOpen=false,currentTab='cowrite';
+
+// ═══════ 工作文档 ═══════
+var WORK_DOC='<h2>2026年第二季度工作总结</h2>'+
+'<p class="date">汇报人：李默 &nbsp;|&nbsp; 2026年6月4日</p>'+
+'<h3>一、核心工作</h3>'+
+'<p>本季度主要围绕用户增长与产品体验优化开展工作，完成了三个重要版本的迭代发布，累计上线需求17项。支付模块重构将成功率从97.2%提升至99.1%。</p>'+
+'<h3>二、数据表现</h3><ul>'+
+'<li>DAU：68万→82万（+20.6%）</li><li>次日留存：42%→47%</li>'+
+'<li>首页CTR：3.2%→4.1%</li><li>支付转化率：65%→72%</li></ul>'+
+'<h3>三、下季度规划</h3>'+
+'<p>启动会员体系2.0设计，推进前端性能优化专项（目标首屏-30%），组织两次跨部门技术分享。</p>';
+
+// ═══════ AI 写小说 ═══════
+function loadCowrite(){
+  try{var d=JSON.parse(localStorage.getItem('wf_cowrite')||'{}');return d;}catch(e){return{};}
+}
+function saveCowrite(d){localStorage.setItem('wf_cowrite',JSON.stringify(d));}
+
+function renderPanel(){
+  var tab=currentTab;
+  var body=$('fpBody'),h='';
+
+  if(tab==='cowrite'){
+    var cw=loadCowrite();
+    h='<div class="cowrite-wrap">'+
+      '<div><label>📖 小说标题</label>'+
+      '<input id="cwTitle" value="'+esc(cw.title||'')+'" placeholder="给你的小说起个名字…" oninput="autoSaveCowrite()"></div>'+
+      '<div><label>🎨 风格</label>'+
+      '<select id="cwStyle" onchange="autoSaveCowrite()">'+
+      '<option value="自由发挥"'+(cw.style==='自由发挥'?' selected':'')+'>自由发挥</option>'+
+      '<option value="悬疑推理"'+(cw.style==='悬疑推理'?' selected':'')+'>悬疑推理</option>'+
+      '<option value="武侠仙侠"'+(cw.style==='武侠仙侠'?' selected':'')+'>武侠仙侠</option>'+
+      '<option value="科幻未来"'+(cw.style==='科幻未来'?' selected':'')+'>科幻未来</option>'+
+      '<option value="都市情感"'+(cw.style==='都市情感'?' selected':'')+'>都市情感</option>'+
+      '<option value="幽默搞笑"'+(cw.style==='幽默搞笑'?' selected':'')+'>幽默搞笑</option>'+
+      '</select></div>'+
+      '<div><label>📝 故事内容</label>'+
+      '<div class="cw-story-box" id="cwStoryBox">'+(cw.story||'').replace(/\n/g,'<br>')+'</div></div>'+
+      '<div class="cw-input-row">'+
+      '<textarea id="cwInput" placeholder="✏️ 在这里写下你的段落…写完点「AI续写」让AI接下去"></textarea>'+
+      '</div>'+
+      '<div class="cw-btn-row">'+
+      '<button class="cw-btn ai-btn" id="cwAiBtn" onclick="cowriteAI()">🤖 AI 续写</button>'+
+      '<button class="cw-btn reset-btn" onclick="resetCowrite()">清空</button>'+
+      '</div>'+
+      '<div class="cw-status" id="cwStatus"></div>'+
+    '</div>';
+  }
+
+  body.innerHTML=h;
+  updateDoc();
+}
+
+function autoSaveCowrite(){
+  var cw=loadCowrite();
+  var t=$('cwTitle'),s=$('cwStyle');
+  if(t)cw.title=t.value.trim();
+  if(s)cw.style=s.value;
+  saveCowrite(cw);
+}
+
+function cowriteAI(){
+  var cw=loadCowrite();
+  var titleEl=$('cwTitle'),styleEl=$('cwStyle'),inputEl=$('cwInput');
+  var storyEl=$('cwStoryBox'),btnEl=$('cwAiBtn'),statusEl=$('cwStatus');
+
+  // 保存标题和风格
+  if(titleEl)cw.title=titleEl.value.trim()||'未命名小说';
+  if(styleEl)cw.style=styleEl.value;
+
+  // 把用户输入追加到故事中
+  var userText=inputEl?inputEl.value.trim():'';
+  if(userText){
+    cw.story=(cw.story||'')+(cw.story?'\n\n':'')+userText;
+    if(inputEl)inputEl.value='';
+    if(storyEl)storyEl.innerHTML=cw.story.replace(/\n/g,'<br>');
+    if(storyEl)storyEl.scrollTop=storyEl.scrollHeight;
+  }
+
+  if(!cw.story){toast('请先在输入框写一段开头');return;}
+
+  saveCowrite(cw);
+  if(btnEl){btnEl.disabled=true;btnEl.textContent='⏳ AI思考中…';}
+  if(statusEl){statusEl.textContent='🤖 AI正在构思续写…';statusEl.className='cw-status typing';}
+
+  fetch('/api/cowrite',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({story:cw.story,title:cw.title,style:cw.style})
+  }).then(function(r){return r.json()}).then(function(j){
+    if(j.code===200&&j.data&&j.data.text){
+      cw.story=cw.story+'\n\n'+j.data.text;
+      saveCowrite(cw);
+      if(storyEl)storyEl.innerHTML=cw.story.replace(/\n/g,'<br>');
+      if(storyEl)storyEl.scrollTop=storyEl.scrollHeight;
+      if(statusEl){statusEl.textContent='✅ AI续写完成！可以继续写或再点续写';statusEl.className='cw-status';}
+      updateDoc();
+    }
+  }).catch(function(e){
+    console.log(e);
+    if(statusEl){statusEl.textContent='⚠ 网络错误，请重试';statusEl.className='cw-status';}
+  }).finally(function(){
+    if(btnEl){btnEl.disabled=false;btnEl.textContent='🤖 AI 续写';}
+  });
+}
+
+function resetCowrite(){
+  if(!confirm('确定清空当前小说？'))return;
+  localStorage.removeItem('wf_cowrite');
+  renderPanel();
+  updateDoc();
+  toast('已清空');
+}
+
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// ═══════ 文档区更新 ═══════
+function updateDoc(){
+  var cw=loadCowrite();
+  var story=cw.story||'';
+  var h='';
+
+  if(currentTab==='cowrite'&&panelOpen){
+    h='<h2 style="font-size:20px;text-align:center;letter-spacing:2px;margin-bottom:4px">'+esc(cw.title||'未命名小说')+'</h2>'+
+      '<p style="text-align:center;font-size:12px;color:#bbb;margin-bottom:24px">'+esc(cw.style||'自由发挥')+' · 🤖 AI共创</p>';
+    if(story){
+      var paras=story.split(/\n\n+/);
+      for(var i=0;i<paras.length;i++){
+        if(paras[i].trim())h+='<p style="text-indent:2em;margin-bottom:10px;line-height:2.2">'+esc(paras[i].trim()).replace(/\n/g,'<br>')+'</p>';
+      }
+    }else{
+      h+='<p style="text-align:center;color:#ccc;padding:80px 0;font-style:italic">在侧边栏「✍️ 共创写作」中开始写小说…</p>';
+    }
+    $('modeText').textContent='摸鱼模式 · AI创作';
+    $('modeText').style.color='#fbbf24';
+    $('sbFishHint').style.opacity='1';
+    $('docPage').classList.add('sidebar-open');
+    var wc=story.replace(/\s/g,'').length;
+    $('sbWords').textContent=(wc||0)+' 字';
+  }else{
+    h=WORK_DOC;
+    $('modeText').textContent='认真模式';
+    $('modeText').style.color='#fff';
+    $('sbFishHint').style.opacity='0';
+    $('docPage').classList.remove('sidebar-open');
+    $('sbWords').textContent='1,280 字';
+  }
+  $('docContent').innerHTML=h;
+}
+
+// ═══════ 面板开关 ═══════
+function togglePanel(){
+  panelOpen=!panelOpen;
+  if(panelOpen){
+    $('fishPanel').classList.add('show');
+    $('fishBtn').classList.add('active');
+    currentTab='cowrite';
+    highlightTab();
+    renderPanel();
+  }else{
+    $('fishPanel').classList.remove('show');
+    $('fishBtn').classList.remove('active');
+    updateDoc();
+  }
+}
+
+function switchTab(tab){
+  currentTab=tab;
+  highlightTab();
+  if(tab==='doc'){togglePanel();return;}
+  renderPanel();
+}
+
+function highlightTab(){
+  document.querySelectorAll('.fp-tab').forEach(function(t){
+    t.classList.toggle('on',t.dataset.tab===currentTab);
+  });
+}
+
+// ═══════ 快捷键 ═══════
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'){
+    if(panelOpen){e.preventDefault();togglePanel();toast('已切回工作文档 📄');}
+  }
+  if(e.ctrlKey&&e.key==='b'){
+    e.preventDefault();togglePanel();
+    toast(panelOpen?'✨ AI创作模式':'📄 工作文档模式');
+  }
+});
+
+// ═══════ 缩放 ═══════
+function doZoom(v){
+  $('zoomLabel').textContent=v+'%';
+  $('docPage').style.transform='scale('+(v/100)+')';
+  $('docPage').style.transformOrigin='top center';
+}
+
+// ═══════ Toast ═══════
+function toast(msg){
+  var t=$('toast');t.textContent=msg;t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show')},1800);
+}
+
+// ═══════ 启动 ═══════
+updateDoc();
+console.log('🐟 摸鱼Word · AI写小说已就绪');
+console.log('   Ctrl+B — 打开AI创作面板');
+console.log('   Esc   — 返回工作文档');
+</script>
+</body>
+</html>

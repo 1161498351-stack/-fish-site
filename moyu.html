@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>系统监控面板 v3.2</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#141428;color:#aab;font-family:'Segoe UI',system-ui,sans-serif;display:flex;
+  justify-content:center;align-items:center;min-height:100vh;overflow:hidden}
+#app{width:600px;background:#181830;border-radius:14px;box-shadow:0 0 80px rgba(80,80,200,.08);overflow:hidden}
+
+/* 头部 */
+.header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:#1c1c38;border-bottom:1px solid #2a2a44}
+.header .brand{font-size:12px;color:#666;letter-spacing:1px}
+.header .dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:6px;background:#4caf50}
+.header .tabs{display:flex;gap:2px}
+.header .tab{padding:5px 12px;border-radius:5px;border:none;cursor:pointer;font-size:11px;
+  background:transparent;color:#777;font-family:inherit;transition:.2s;letter-spacing:1px}
+.header .tab:hover{color:#ccc;background:#222240}
+.header .tab.on{color:#7af;background:#222240}
+
+/* 伪装面板 */
+.cover{padding:30px 24px 24px;text-align:center}
+.cover .big{font-size:56px;font-weight:700;background:linear-gradient(180deg,#8bf,#5af);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
+.cover .sub{font-size:12px;color:#555;letter-spacing:2px;margin-bottom:28px}
+.cover .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:0 10px}
+.cover .m{background:#1c1c38;border-radius:10px;padding:18px 10px;text-align:center}
+.cover .m .v{font-size:24px;font-weight:600;color:#ccc;margin-bottom:4px}
+.cover .m .l{font-size:10px;color:#555;letter-spacing:1px}
+.cover .chart{height:70px;margin:20px 10px 0;background:#1c1c38;border-radius:10px;position:relative;overflow:hidden;padding:8px}
+.cover .chart .bar{position:absolute;bottom:0;width:5%;background:linear-gradient(180deg,#3a5a80,#253555);border-radius:2px 2px 0 0}
+.cover .tip{font-size:10px;color:#333;margin-top:18px;letter-spacing:1px}
+
+/* 游戏容器 */
+.gwrap{display:block;min-height:440px;position:relative}
+.gwrap.off{display:none}
+
+/* 2048 */
+.g2048{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+.g2048 .info{margin-bottom:14px;font-size:14px;color:#7af}
+.g2048 .info b{color:#ccc}
+.grid4x4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:10px;background:#1c1c34;border-radius:12px}
+.grid4x4 .tc{width:100px;height:100px;border-radius:10px;display:flex;align-items:center;
+  justify-content:center;font-size:30px;font-weight:700;transition:all .12s ease;background:#242440;color:#444}
+.grid4x4 .tc.n2{background:#3a3a54;color:#bb0}.grid4x4 .tc.n4{background:#3a3a58;color:#cc0}
+.grid4x4 .tc.n8{background:#406038;color:#fff}.grid4x4 .tc.n16{background:#3a5838;color:#fff}
+.grid4x4 .tc.n32{background:#485030;color:#fff}.grid4x4 .tc.n64{background:#504028;color:#fff}
+.grid4x4 .tc.n128{background:#504020;color:#fff;font-size:26px}
+.grid4x4 .tc.n256{background:#504020;color:#fff;font-size:26px}
+.grid4x4 .tc.n512{background:#601818;color:#fff;font-size:26px}
+.grid4x4 .tc.n1024{background:#600810;color:#fff;font-size:22px}
+.grid4x4 .tc.n2048{background:#700010;color:#ff0;font-size:22px;box-shadow:0 0 20px rgba(255,200,0,.3)}
+.grid4x4 .tc.new{animation:pop .18s ease}@keyframes pop{0%{transform:scale(0)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
+.g2048 .keys{color:#444;font-size:11px;margin-top:20px;letter-spacing:1px}
+.g2048 .keys kbd{background:#222240;padding:2px 6px;border-radius:3px;color:#888;border:1px solid #333}
+
+/* 反应测试 */
+.greact{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px}
+.greact .status{font-size:13px;color:#555;letter-spacing:1px;margin-bottom:12px}
+.greact .ms{font-size:56px;font-weight:700;margin:12px 0;min-height:68px}
+.greact .circle{width:140px;height:140px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;cursor:pointer;font-size:15px;font-weight:700;letter-spacing:2px;
+  background:#1c1c38;color:#7af;transition:all .15s;box-shadow:0 0 30px rgba(80,80,200,.08)}
+.greact .circle.w{background:#b03030;box-shadow:0 0 40px rgba(255,50,50,.25);color:#fff}
+.greact .circle.g{background:#38a038;box-shadow:0 0 50px rgba(76,175,80,.3);color:#fff;transform:scale(1.05)}
+.greact .best{font-size:12px;color:#444;margin-top:14px}
+
+/* 记忆翻牌 */
+.gmem{display:flex;flex-direction:column;align-items:center;padding:20px}
+.gmem .info{font-size:13px;color:#7af;margin-bottom:12px} .gmem .info span{color:#888}
+.gmem .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.gmem .mc{width:90px;height:90px;border-radius:10px;cursor:pointer;font-size:36px;
+  display:flex;align-items:center;justify-content:center;transition:all .25s;
+  background:linear-gradient(135deg,#253550,#1a2840);border:2px solid #2a3050}
+.gmem .mc.open{background:#1e1e38;border-color:#4a5070}
+.gmem .mc.done{background:#1c3a1c;border-color:#3a5a3a;opacity:.7;pointer-events:none}
+.gmem .msg{color:#555;font-size:12px;margin-top:16px;letter-spacing:1px}
+
+/* 底部 */
+.foot{display:flex;justify-content:space-between;align-items:center;padding:10px 20px;
+  border-top:1px solid #2a2a44;font-size:10px;color:#3a3a50}
+.foot .hk{color:#33a}
+
+/* 隐藏的游戏面板 */
+.g2048,.greact,.gmem{display:none}
+.g2048.on,.greact.on,.gmem.on{display:flex}
+</style>
+</head>
+<body>
+<div id="app">
+
+<div class="header">
+  <div><span class="dot"></span><span class="brand">系统监控面板 v3.2 · 所有指标正常</span></div>
+  <div class="tabs">
+    <button class="tab" data-g="cover" onclick="nav('cover')">📊 面板</button>
+    <button class="tab on" data-g="2048" onclick="nav('2048')">2⁰⁴⁸</button>
+    <button class="tab" data-g="react" onclick="nav('react')">⚡ 反应</button>
+    <button class="tab" data-g="mem" onclick="nav('mem')">🧠 记忆</button>
+  </div>
+</div>
+
+<!-- 伪装 -->
+<div class="cover" id="cover">
+  <div class="big" id="clock">00:00</div>
+  <div class="sub">CPU 空闲 87% · 内存 62% · 网络正常</div>
+  <div class="grid4">
+    <div class="m"><div class="v">99.7%</div><div class="l">可用性</div></div>
+    <div class="m"><div class="v">42ms</div><div class="l">平均延迟</div></div>
+    <div class="m"><div class="v">3.2G</div><div class="l">吞吐量</div></div>
+    <div class="m"><div class="v">8台</div><div class="l">在线节点</div></div>
+  </div>
+  <div class="chart" id="fakeChart"></div>
+  <div class="tip">按 ` 快速切换面板 ↔ 游戏（老板键）</div>
+</div>
+
+<!-- 游戏区 -->
+<div class="gwrap" id="gwrap">
+
+  <!-- 2048 -->
+  <div class="g2048 on" id="p2048">
+    <div class="info">🏆 <b id="hi2048">0</b>&nbsp;&nbsp; 得分 <b id="sc2048">0</b></div>
+    <div class="grid4x4" id="g2048"></div>
+    <div class="keys">方向键 / <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 移动 &nbsp; 合并到 <kbd>2048</kbd></div>
+  </div>
+
+  <!-- 反应 -->
+  <div class="greact" id="pReact">
+    <div class="status" id="rStatus">点击圆圈开始测试反应速度</div>
+    <div class="ms" id="rMs">--</div>
+    <div class="circle" id="rCircle" onclick="rClick()">开始</div>
+    <div class="best">🏆 最快：<span id="rBest">--</span> ms</div>
+  </div>
+
+  <!-- 记忆 -->
+  <div class="gmem" id="pMem">
+    <div class="info">已配对 <b id="mPaired">0</b>/8 &nbsp; 步数 <span id="mSteps">0</span></div>
+    <div class="grid" id="mGrid"></div>
+    <div class="msg" id="mMsg">翻开两张相同图案即可消除</div>
+  </div>
+
+</div>
+
+<div class="foot">
+  <span>NODE-04 · IDLE</span>
+  <span class="hk">按 ` 键切换面板</span>
+  <span id="fHint">方向键移动 · 2048</span>
+</div>
+
+</div>
+
+<script>
+// ═══════ 全局 ═══════
+var cur='2048';
+var inited2048=false,initedMem=false,initedReact=false;
+var G=function(id){return document.getElementById(id)};
+
+function nav(g){
+  cur=g;
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.toggle('on',t.dataset.g===g)});
+  G('cover').style.display=g==='cover'?'block':'none';
+  G('gwrap').classList.toggle('off',g==='cover');
+  G('p2048').classList.toggle('on',g==='2048');
+  G('pReact').classList.toggle('on',g==='react');
+  G('pMem').classList.toggle('on',g==='mem');
+  G('fHint').textContent=g==='cover'?'按 ` 切回游戏':g==='2048'?'方向键 · 2048':g==='react'?'点击测试反应':'翻牌配对';
+  // 修复：只在首次进入时初始化，切换tab不重置游戏进度
+  if(g==='2048'&&!inited2048){init2048();inited2048=true;}
+  if(g==='mem'&&!initedMem){initMem();initedMem=true;}
+  if(g==='react'&&!initedReact){rReset();initedReact=true;}
+}
+
+// 老板键
+document.addEventListener('keydown',function(e){if(e.key==='`'){e.preventDefault();nav(cur==='cover'?'2048':'cover');}});
+
+// 时钟
+(function tick(){const n=new Date();G('clock').textContent=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');setTimeout(tick,30000);})();
+
+// 假图表
+(function(){let h='';for(let i=0;i<14;i++)h+=`<div class="bar" style="left:${i*7+1}%;height:${25+Math.random()*55}%"></div>`;G('fakeChart').innerHTML=h;})();
+
+// ═══════ 2048 ═══════
+let g=[],sc=0,hi=parseInt(localStorage.hi||'0');
+G('hi2048').textContent=hi;
+function init2048(){g=[[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]];sc=0;G('sc2048').textContent='0';sp();sp();draw2048();}
+function sp(){const e=[];for(let r=0;r<4;r++)for(let c=0;c<4;c++)if(!g[r][c])e.push([r,c]);if(!e.length)return;const[x,y]=e[Math.random()*e.length|0];g[x][y]=Math.random()<.9?2:4;}
+function draw2048(){const d=G('g2048');let h='';for(let r=0;r<4;r++)for(let c=0;c<4;c++){const v=g[r][c];h+=`<div class="tc${v&&v<=4?' new':''}${v?' n'+v:''}">${v||''}</div>`;}d.innerHTML=h;setTimeout(()=>d.querySelectorAll('.new').forEach(e=>e.classList.remove('new')),200);}
+function slide(row){let a=row.filter(v=>v),r=[],i=0;while(i<a.length){if(i+1<a.length&&a[i]===a[i+1]){r.push(a[i]*2);sc+=a[i]*2;i+=2}else{r.push(a[i]);i++;}}while(r.length<4)r.push(0);return r;}
+function mv(dir){
+  const old=JSON.stringify(g);
+  if(dir==='up'){for(let c=0;c<4;c++){let col=slide([g[0][c],g[1][c],g[2][c],g[3][c]]);for(let r=0;r<4;r++)g[r][c]=col[r];}}
+  else if(dir==='down'){for(let c=0;c<4;c++){let col=slide([g[3][c],g[2][c],g[1][c],g[0][c]]);col.reverse();for(let r=0;r<4;r++)g[r][c]=col[r];}}
+  else if(dir==='left'){for(let r=0;r<4;r++)g[r]=slide(g[r]);}
+  else if(dir==='right'){for(let r=0;r<4;r++){g[r].reverse();g[r]=slide(g[r]);g[r].reverse();}}
+  if(JSON.stringify(g)!==old){sp();draw2048();G('sc2048').textContent=sc;
+    if(sc>hi){hi=sc;localStorage.hi=hi;G('hi2048').textContent=hi;}
+    if(!canGo()){setTimeout(()=>{alert('游戏结束！得分：'+sc);init2048();},300);}}
+}
+function canGo(){for(let r=0;r<4;r++)for(let c=0;c<4;c++){if(!g[r][c])return true;if(c<3&&g[r][c]===g[r][c+1])return true;if(r<3&&g[r][c]===g[r+1][c])return true;}return false;}
+
+document.addEventListener('keydown',e=>{
+  if(cur!=='2048'||document.activeElement.tagName==='INPUT')return;
+  const m={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',s:'down',a:'left',d:'right'};
+  if(m[e.key]){e.preventDefault();mv(m[e.key]);}
+});
+
+// ═══════ 反应测试 ═══════
+let rs='idle',rt=0,to=null,rb=parseInt(localStorage.rb||'0');
+G('rBest').textContent=rb||'--';
+function rReset(){rs='idle';G('rCircle').textContent='开始';G('rCircle').className='circle';G('rStatus').textContent='点击圆圈开始测试';G('rMs').textContent='--';if(to)clearTimeout(to);}
+function rClick(){
+  if(rs==='idle'){rs='wait';G('rCircle').textContent='等待';G('rCircle').className='circle w';G('rStatus').textContent='等变绿后立刻点击！';G('rMs').textContent='...';to=setTimeout(()=>{rs='go';rt=performance.now();G('rCircle').textContent='点！';G('rCircle').className='circle g';G('rStatus').textContent='⚡ 现在就点！';},1500+Math.random()*3000);}
+  else if(rs==='wait'){clearTimeout(to);G('rCircle').textContent='太早';G('rCircle').className='circle';G('rStatus').textContent='还没变绿呢...重来';rs='idle';setTimeout(rReset,1500);}
+  else if(rs==='go'){const ms=Math.round(performance.now()-rt);G('rMs').textContent=ms+' ms';G('rCircle').textContent=ms+'ms';G('rCircle').className='circle g';G('rStatus').textContent=ms<150?'⚡ 闪电！':ms<250?'很快！':ms<400?'不错':'再练练';if(!rb||ms<rb){rb=ms;localStorage.rb=rb;G('rBest').textContent=rb;}rs='idle';setTimeout(rReset,2200);}
+}
+
+// ═══════ 记忆翻牌 ═══════
+const EMO=['🐶','🐱','🐼','🐨','🐸','🦊','🐙','🦋'];
+let mc=[],fl=[],matched=0,steps=0,lock=false;
+function initMem(){const p=[...EMO,...EMO];mc=p.sort(()=>Math.random()-.5).map((e,i)=>({e,i}));fl=[];matched=0;steps=0;lock=false;G('mPaired').textContent='0';G('mSteps').textContent='0';G('mMsg').textContent='翻开两张相同图案即可消除';drawMem();}
+function drawMem(){
+  G('mGrid').innerHTML=mc.map((c,i)=>{
+    let cls='mc';if(fl.includes(i))cls+=' open';if(c.done)cls+=' done';
+    return`<div class="${cls}" onclick="flip(${i})">${fl.includes(i)||c.done?c.e:'?'}</div>`;
+  }).join('');
+}
+function flip(i){
+  if(lock||fl.includes(i)||mc[i].done)return;
+  fl.push(i);steps++;G('mSteps').textContent=steps;drawMem();
+  if(fl.length===2){
+    lock=true;
+    const a=mc[fl[0]],b=mc[fl[1]];
+    if(a.e===b.e){a.done=b.done=true;matched++;G('mPaired').textContent=matched;fl=[];lock=false;drawMem();
+      if(matched===EMO.length){G('mMsg').textContent='🎉 全部配对！'+steps+' 步完成';setTimeout(initMem,2500);}
+    }else{setTimeout(()=>{fl=[];lock=false;drawMem();},700);}
+  }
+}
+
+// 启动
+nav('2048');
+</script>
+</body>
+</html>
