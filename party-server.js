@@ -149,21 +149,20 @@ function aiPersonality(d,res){
     if(recent[i].role==='user'&&recent[i].content.length<5)shortCount++;else break;
   }
 
-  const sysPrompt='你是一个温和、有好奇心的聊天观察助手。你只能基于用户在对话中明确说过的内容做观察。不得编造用户经历、爱好、性格。不得进行心理诊断。如果证据不足，必须说"目前信息不足"。聊天要像微信自然对话，不要尬笑，不要过度热情。第一轮要简短自我介绍你是谁，之后不要再重复。';
+  const sysPrompt='你是一个有好奇心、善于观察的聊天伙伴。你的目标是通过自然对话了解一个人。原则：真诚、灵活、不套路。你像是一个善于倾听的朋友，而不是在做问卷调查。不要编造用户没说过的话。不要做心理诊断。';
   let userPrompt,temperature,maxTokens;
 
   if(mode==='start'){
-    temperature=0.75;maxTokens=200;
-    userPrompt='这是你和'+name+'的第一次对话。\n\n你需要做两件事：\n\n第一步：简短自我介绍（你是谁、在做什么）。\n例："我是你的性格观察助手，喜欢通过聊天来了解一个人。"\n\n第二步：问一个具体问题。\n\n自我介绍不超过20字，问题不超过25字。\n语气要温和自然，像一个有好奇心的人在认识新朋友。\n\n禁止开场白类型：\n- 纯寒暄无内容（"嗨""你好呀"之后没身份说明）\n- 直接扔问题不做自我介绍\n- "今天过得咋样""最近怎么样"等万能问题\n\n问题从以下方向选：\n工作内容、周末安排、饮食口味、运动习惯、音乐偏好。\n\n好的示例：\n"嘿，我是小墨，喜欢通过聊天了解一个人。你平时工作是做什么的？"\n\n坏的示例：\n"嗨，周末一般在家休息还是出去转转？" ← 没自我介绍，像审问';
+    temperature=0.85;maxTokens=200;
+    userPrompt='你将和'+name+'开始一段对话。自然地打个招呼，简短介绍自己（你是喜欢通过聊天了解人的观察者），然后根据对方的反应灵活聊下去。不要用模板化的开场白，不要像客服。像认识新朋友一样。可以分享一点自己的风格，让对方感觉你在认真对待这次对话。';
   }else if(mode==='report'){
-    temperature=0.6;maxTokens=1200;
-    userPrompt='用户画像摘要：\n'+summary+'\n\n最近对话：\n'+recentText+'\n\n请生成人格观察报告。格式：\n【性格画像】3-5个关键词，每词配依据\n【沟通风格】简述+依据\n【行动倾向】简述+依据\n【压力反应】简述+依据\n【关系模式】简述+依据\n【MBTI倾向】只能写倾向（如"更接近ENFP/INFP"），不能写确定结论\n【证据来源】列出报告中每条判断对应的用户原话\n【不确定项】证据不足的地方\n\n要求：\n1.每个判断必须对应原话或摘要依据\n2.不得编造\n3.语气直接克制\n4.如果某一栏证据不足，该栏写"目前信息不足"，不要硬凑';
+    temperature=0.55;maxTokens=1200;
+    userPrompt='以下是和'+name+'的完整对话。请基于对话内容生成一份人格观察报告。\n\n对话记录：\n'+recentText+'\n\n报告格式：\n【整体印象】你对这个人的直观感受（2-3句话）\n【性格特征】从对话中观察到的性格特点，每条都要引用对话原话作为依据\n【MBTI倾向】推测可能的类型倾向（注意：只写倾向，不写确定结论。证据不足就说不足）\n【优势与盲区】基于对话的观察\n【证据不足的地方】明确列出哪些方面信息不够\n\n核心要求：只能基于对话中实际出现的内容。不要编造。不要把倾向写成结论。语气像一个有洞察力的朋友在分享观察，不要像诊断报告。';
   }else{
-    temperature=0.8;maxTokens=200;
-    var extraRule='';
-    if(shortCount>=2)extraRule='\n\n用户已经连续'+shortCount+'次回答很短。不要继续追问刚才的话题。从【可选话题方向】中换一个轻松方向，问一个二选一问题。问题必须具体，不能问万能问题。';
-    userPrompt='用户画像摘要：'+summary+'\n\n最近对话：\n'+recentText+extraRule+'\n\n可选话题方向：\n工作内容、周末安排、饮食口味、运动习惯、音乐偏好、睡眠作息、社交偏好、消费习惯、童年记忆、理想生活、压力来源、成就感来源。\n\n回复规则：\n1.不要重新自我介绍\n2.不要编造用户经历、爱好、性格\n3.聊天阶段不要做人格判断，也不要说"目前信息不足"\n4.每次只问一个问题，不超过35字\n5.绝对不要重复最近两轮已经问过的话题方向，不只是原句，连同类方向也不要重复\n6.不要使用万能问题，例如：\n  "最近怎么样""今天过得咋样""有什么新鲜事""有什么想聊的""有什么印象深的""能多说说吗"\n7.如果用户最后一句少于5字，必须直接换话题\n8.换话题时，必须从【可选话题方向】里选一个最近没问过的方向\n9.用户短回答时，不要评价用户回答，不要说"还好也不错""这样啊"\n10.短回答后的问题必须是二选一问题\n\n二选一句式只能使用：\n- 你更偏向A，还是B？\n- 平时更像A，还是B？\n- 如果只能选一个，你会选A还是B？\n\n示例：\n用户：还好\n回复：你周末更像补觉型，还是出门透气型？\n\n用户：没有\n回复：吃东西你更偏重口味，还是清淡点？\n\n用户：不知道\n回复：听歌时你更看歌词，还是旋律？';
-    if(summary==='对话刚开始，尚无足够信息。')userPrompt+='\n\n用户画像摘要信息很少，不要围绕摘要追问。直接从未问过的话题方向中选一个具体生活问题。';
+    temperature=0.85;maxTokens=250;
+    var shortHint='';
+    if(shortCount>=2)shortHint='\n\n注意：对方已经连续简短回复了几次。不要继续在同一个方向上追问。自然地换个话题，或者分享一点相关的个人观察来打破僵局。保持轻松，不要施压。';
+    userPrompt='以下是和'+name+'的对话记录：\n\n'+recentText+shortHint+'\n\n你现在作为聊天伙伴，回复对方最后一条消息。要求：\n- 像朋友聊天一样自然，不要模板化\n- 根据对方说的话灵活回应，可以追问、可以共鸣、可以分享观点\n- 如果对方说得多就深入聊，说得少就换个方向轻轻试探\n- 不要连续在同一个话题上追问\n- 不要使用"最近怎么样""有什么新鲜事"这类空洞的万能问题\n- 不要评价对方回答的好坏（如"挺好的""不错啊"）\n- 不要做人格判断（如"你看起来是一个XX的人"）';
   }
   const body=JSON.stringify({model:'deepseek-chat',messages:[{role:'system',content:sysPrompt},{role:'user',content:userPrompt}],temperature:temperature,max_tokens:maxTokens});
   const apiReq=https.request({hostname:'api.deepseek.com',path:'/chat/completions',method:'POST',
@@ -188,7 +187,7 @@ function aiPersonality(d,res){
   apiReq.write(body);apiReq.end();
 }
 
-function checkAllDescribed(room){
+function checkAllDescribed(room){function checkAllDescribed(room){
   const alive=Object.values(room.players).filter(x=>x.alive);
   if(alive.every(x=>x.described)&&room.status==='describing'){
     room.status='voting';
