@@ -102,18 +102,12 @@ h1{font-size:44px;letter-spacing:12px;font-weight:400;margin-bottom:6px;
   border:1px solid #5a3030;border-radius:20px;padding:32px 24px 24px;
   box-shadow:0 12px 60px rgba(0,0,0,.6);transition:all .5s cubic-bezier(.34,1.56,.64,1)}
 .result.show{display:block;opacity:1;transform:translateY(0)}
-.badge{display:inline-block;padding:4px 20px;border-radius:20px;font-size:12px;letter-spacing:4px;margin-bottom:10px}
-.badge.good{color:#5cb85c;border:1px solid #5cb85c}.badge.warn{color:#f0ad4e;border:1px solid #f0ad4e}.badge.bad{color:#d9534f;border:1px solid #d9534f}
-.result .sign-name{font-size:28px;margin:10px 0 4px;letter-spacing:4px}
-.result .poem{font-size:15px;color:#b89070;line-height:2.2;margin:16px 0;padding:14px 0;border-top:1px solid #402020;border-bottom:1px solid #402020;white-space:pre-line}
-.result .reading{font-size:14px;color:#c8a880;line-height:1.9;text-align:left}
-.result .reading em{color:#ffd700;font-weight:700;font-style:normal}
-.result .bazi-reading{font-size:13px;color:#c09060;line-height:1.8;text-align:left;
-  margin-top:10px;padding:12px 14px;background:rgba(60,20,20,.3);border-radius:10px;border:1px solid #402020}
-.result .bazi-reading em{color:#ffb800;font-weight:700;font-style:normal}
-.result .advice-tag{display:inline-block;margin-top:14px;padding:8px 22px;
-  background:linear-gradient(135deg,rgba(180,50,50,.25),rgba(140,30,30,.25));
-  border:1px solid #703030;border-radius:20px;font-size:13px;color:#d89090;letter-spacing:2px}
+.mode-tabs{display:flex;gap:8px;justify-content:center;margin-bottom:18px}
+.mode-tab{padding:8px 20px;border-radius:20px;border:1px solid #503030;background:transparent;color:#906050;font-family:inherit;font-size:13px;cursor:pointer;letter-spacing:2px;transition:all .2s}
+.mode-tab.on{background:rgba(180,80,40,.25);border-color:#a06040;color:#f0c080;font-weight:700}
+.mode-tab:hover{border-color:#a06040}
+.fortune-text{font-size:14px;color:#c8a880;line-height:2;text-align:left;padding:10px 0;white-space:pre-line}
+.fortune-text em{color:#ffd700;font-weight:700;font-style:normal}
 .result .again{display:block;margin:22px auto 0;padding:11px 36px;background:transparent;
   border:1px solid #503030;color:#a08060;font-family:inherit;font-size:14px;letter-spacing:3px;
   border-radius:22px;cursor:pointer;transition:all .3s}
@@ -158,12 +152,11 @@ h1{font-size:44px;letter-spacing:12px;font-weight:400;margin-bottom:6px;
   </div>
 
   <div class="result" id="result">
-    <div class="badge" id="badge"></div>
-    <div class="sign-name" id="sname"></div>
-    <div class="poem" id="poem"></div>
-    <div class="reading" id="reading"></div>
-    <div class="bazi-reading" id="baziReading" style="display:none"></div>
-    <div class="advice-tag" id="advice"></div>
+    <div class="mode-tabs" id="modeTabs">
+      <button class="mode-tab on" data-mode="today" onclick="switchMode('today')">🔮 今日运势</button>
+      <button class="mode-tab" data-mode="life" onclick="switchMode('life')">📜 一生总览</button>
+    </div>
+    <div class="fortune-text" id="fortuneText"></div>
     <button class="again" onclick="backToTong()">再求一签</button>
   </div>
 
@@ -272,7 +265,7 @@ const LOTS=[
 {type:'bad',sign:'凶签 · 穷猿奔林',poem:'穷猿投林不择枝\n慌忙只恐误多时\n劝君且把心猿锁\n仔细思量再动移',reading:'<em>今年最大的风险是"慌不择路"。</em>如果失业或项目黄了，仓促间可能接下一个更差的坑。不要因为社保断缴或空窗期焦虑就随便入职。<em>宁愿多花两个月找到对的方向</em>。现金流紧张时先做副业过渡。',advice:'忌：慌不择路；宜：冷静规划 · 宁缺毋滥'},
 ];
 
-let busy=false;
+var busy=false,fortuneMode='today';
 
 function shake(){
   if(busy)return;
@@ -308,61 +301,38 @@ function shake(){
   setTimeout(async ()=>{
     tong.classList.remove('shaking');
 
-    let lotResult=null;
-
+    var resultText='';
     if(baziData){
-      const baziStr=baziData.year.gan+baziData.year.zhi+' '+baziData.month.gan+baziData.month.zhi+' '+baziData.day.gan+baziData.day.zhi+' '+baziData.hour.gan+baziData.hour.zhi;
-      const wx=WUXING_MAP[baziData.day.gan];
+      var baziStr=baziData.year.gan+baziData.year.zhi+' '+baziData.month.gan+baziData.month.zhi+' '+baziData.day.gan+baziData.day.zhi+' '+baziData.hour.gan+baziData.hour.zhi;
+      var wx=WUXING_MAP[baziData.day.gan];
       try{
-        const resp=await fetch('/api/fortune',{
+        var resp=await fetch('/api/fortune',{
           method:'POST',
           headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({name:'有缘人',wuxing:wx,bazi:baziStr,gender:''})
+          body:JSON.stringify({name:'有缘人',wuxing:wx,bazi:baziStr,gender:'',mode:fortuneMode})
         });
-        const j=await resp.json();
-        if(j.code===200&&j.data){
-          const d=j.data;
-          lotResult={type:d.level.includes('上')?'good':d.level.includes('下')||d.level.includes('凶')?'bad':'warn',
-            sign:d.sign,poem:d.poem.replace(/\\n/g,'\n'),reading:d.reading,advice:d.advice,ai:true};
-        }
-      }catch(e){console.log('AI fail, fallback');}
+        var j=await resp.json();
+        if(j.code===200&&j.data)resultText=j.data.text;
+      }catch(e){console.log('AI fail');}
     }
+    if(!resultText)resultText='（天机未显，请先排八字，或稍后再试）';
 
-    if(!lotResult){
-      let seed=Math.floor(Math.random()*LOTS.length);
-      if(baziData){var dg=GAN.indexOf(baziData.day.gan);var dz=ZHI.indexOf(baziData.day.zhi);seed=(seed+dg+dz*3)%LOTS.length;}
-      lotResult={type:LOTS[seed].type,sign:LOTS[seed].sign,poem:LOTS[seed].poem,reading:LOTS[seed].reading,advice:LOTS[seed].advice,ai:false};
-    }
-
-    var lot=lotResult;
-
-    var badge=document.getElementById('badge');
-    badge.textContent=lot.ai?'✨ AI':(lot.type==='good'?'吉':lot.type==='warn'?'平':'凶');
-    badge.className='badge '+lot.type;
-
-    document.getElementById('sname').textContent=lot.sign;
-    document.getElementById('poem').textContent=lot.poem;
-    document.getElementById('reading').innerHTML=lot.reading;
-    document.getElementById('advice').textContent=lot.advice;
-
-    var baziDiv=document.getElementById('baziReading');
-    if(baziData&&!lot.ai){
-      baziDiv.innerHTML=baziReading(baziData.day.gan,lot.type);
-      baziDiv.style.display='block';
-    }else{
-      baziDiv.style.display='none';
-    }
+    document.getElementById('fortuneText').innerHTML=resultText.replace(/\n/g,'<br>');
+    document.getElementById('modeTabs').style.display='flex';
 
     var result=document.getElementById('result');
     result.style.display='block';
-    requestAnimationFrame(()=>{
+    requestAnimationFrame(function(){
       result.classList.add('show');
       result.scrollIntoView({behavior:'smooth',block:'center'});
     });
-
     document.getElementById('tongWrap').style.display='none';
     busy=false;
-  },1000);
+}
+
+function switchMode(m){
+  fortuneMode=m;
+  document.querySelectorAll('.mode-tab').forEach(function(t){t.classList.toggle('on',t.dataset.mode===m)});
 }
 
 function backToTong(){
