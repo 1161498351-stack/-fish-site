@@ -152,21 +152,30 @@ function aiPersonality(d,res){
   const sysPrompt='你是人格观察AI。你的目标是通过对话收集用户的多维度信息来生成分析报告。收集维度：工作、兴趣、社交、价值观、压力应对、生活态度。\n\n对话风格：\n- 真诚、简洁，不假装人类\n- 每次只问一个问题，不连珠炮\n- 用户简短回应时追问一句确认，然后自然换方向\n- 不编造自己的经历，不评价用户回答的好坏\n- 对话已经开始后，不要再自我介绍，直接回应上一句话';
   let userPrompt,temperature,maxTokens;
 
+  var messages=[{role:'system',content:sysPrompt}];
   if(mode==='start'){
     temperature=0.85;maxTokens=300;
-    userPrompt='开始和'+name+'的对话。一句话打招呼，然后问一个关于ta日常的问题。不要客套介绍，直接像认识新朋友一样聊。';
+    messages.push({role:'user',content:'你好！我叫'+name+'。请开始我们的对话。'});
   }else if(mode==='report'){
     temperature=0.55;maxTokens=2000;
-    userPrompt='对话记录：\n'+recentText+'\n\n第一步：判断信息是否足够生成有参考价值的报告。如果对话太短，或者只覆盖了一两个话题方向，不要说"报告如下"，直接告诉用户："目前聊了X个方向，信息还不够。建议再聊聊以下方面：..."并列出2-3个建议方向。\n\n第二步：如果信息覆盖了至少3个不同的人格维度，再输出报告。格式：\n【整体印象】\n【性格特征】每条引用原话\n【MBTI倾向】不确定就写不确定\n【需要更多信息的地方】\n\n只基于对话实际内容。';
+    // 把对话历史作为原生messages
+    for(var i=0;i<chatHistory.length;i++){
+      messages.push({role:chatHistory[i].role==='ai'?'assistant':'user',content:chatHistory[i].content});
+    }
+    messages.push({role:'user',content:'基于以上对话，生成人格观察报告。如果对话信息太少（覆盖的话题方向少于3个），直接告诉我还需要聊哪些方向。如果信息够了，按这个格式输出：【整体印象】【性格特征-每条引用原话】【MBTI倾向-不确定就写不确定】【优势】【需要更多信息的地方】。只基于对话实际内容。'});
   }else{
     temperature=0.85;maxTokens=400;
+    // 把对话历史作为原生messages，模型能理解对话结构
+    for(var i=0;i<chatHistory.length;i++){
+      messages.push({role:chatHistory[i].role==='ai'?'assistant':'user',content:chatHistory[i].content});
+    }
     var dims=['工作状态','兴趣偏好','社交风格','价值观','压力应对','生活态度'];
     var uncovered=[];
     for(var i=0;i<dims.length;i++){if(recentText.indexOf(dims[i])<0)uncovered.push(dims[i]);}
-    var hint=uncovered.length>0?'\n\n尚未涉及的方向：'+uncovered.join('、')+'。在自然对话中尝试触及。':'';
-    userPrompt='对话记录：\n'+recentText+hint+'\n\n回应用户。不要自我介绍，直接回应上一句话。';
+    var hint=uncovered.length>0?'尚未触及的维度：'+uncovered.join('、')+'' :'';
+    messages.push({role:'user',content:(hint?'[待覆盖的维度：'+hint+'] ':'')+'你的任务是通过对话了解这个人。回应上一条，同时自然地推进对话，逐步覆盖待收集的维度。'});
   }
-  const body=JSON.stringify({model:'deepseek-chat',messages:[{role:'system',content:sysPrompt},{role:'user',content:userPrompt}],temperature:temperature,max_tokens:maxTokens});
+  const body=JSON.stringify({model:'deepseek-chat',messages:messages,temperature:temperature,max_tokens:maxTokens});
   const apiReq=https.request({hostname:'api.deepseek.com',path:'/chat/completions',method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer '+DS_KEY}},apiRes=>{
     let data='';apiRes.on('data',c=>data+=c);
