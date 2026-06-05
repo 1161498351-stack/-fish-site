@@ -317,7 +317,7 @@ function aiPersonality(d,res){
   }else if(mode==='report'){
     userPrompt='基于我们的聊天记录，请给我一份详细的人格分析报告。务必引用对话中的原话来支撑你的分析。格式如下：\n\n【性格画像】用3-5个关键词概括，每个词配一句解释，尽量引用对话原话\n\n【MBTI推测】推测类型并解释，引用对话中的具体表现\n\n【优势领域】工作/人际/创造力等，结合对话中提到的实际情况\n\n【潜在盲区】2-3个可能需要留意的地方\n\n【成长建议】3条具体可行的建议\n\n【适合职业】推荐3-5个职业方向并解释原因\n\n【关系模式】在亲密关系和职场关系中可能的特点\n\n聊天记录：\n'+history.map(function(m){return m.role+': '+m.content}).join('\n')+'\n\n请生成报告，语言温暖真诚，引用对话原话时标出。';
   }else{
-    userPrompt='对话历史：\n'+history.map(function(m){return m.role+': '+m.content}).join('\n')+'\n\n回应规则：\n1. 只基于用户实际说过的话来回应，不要替他编造经历或爱好\n2. 如果你想了解某个方向但用户没提过，直接问——"对了，你平时周末喜欢干嘛？"这样\n3. 语气像微信聊天，简短自然，不要说"哈哈""哇"这种刻意热情的词\n4. 如果用户说得很少（就几个字），可以追问细节；如果用户说了一大段，挑一个点深入\n5. 每次只说一件事，2-3句话足够';
+    userPrompt='对话历史：\n'+history.map(function(m){return m.role+': '+m.content}).join('\n')+'\n\n回应规则：\n1. 对话已经开始了，绝对不要重新自我介绍或打招呼\n2. 如果用户回答很短（"没有""还行""不知道"），不要慌——可以换个角度追问，比如"那你平时怎么打发时间？"或者聊点轻松的\n3. 如果用户说了具体的内容，就顺着往下聊，不要突然换话题\n4. 不要替用户编造经历，不确定就直接问\n5. 语气像微信上跟朋友闲聊，简短自然，一次只说一件事';
   }
   const body=JSON.stringify({model:'deepseek-chat',messages:[{role:'system',content:sysPrompt},{role:'user',content:userPrompt}],temperature:0.8,max_tokens:mode==='report'?1500:300});
   const apiReq=https.request({hostname:'api.deepseek.com',path:'/chat/completions',method:'POST',
