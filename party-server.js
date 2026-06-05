@@ -162,7 +162,7 @@ function aiPersonality(d,res){
     temperature=0.85;maxTokens=250;
     var shortHint='';
     if(shortCount>=2)shortHint='\n\n注意：对方已经连续简短回复了几次。不要继续在同一个方向上追问。自然地换个话题，或者分享一点相关的个人观察来打破僵局。保持轻松，不要施压。';
-    userPrompt='以下是和'+name+'的对话记录：\n\n'+recentText+shortHint+'\n\n回复对方最后一条消息。你可以：追问、共鸣、分享自己的相关经历或观点、开个轻松的玩笑、或者只是接住对方的话然后自然停顿。\n\n关键原则：\n- 这不是采访。你不需要每轮都问问题。有时候分享一个想法比问问题更好\n- 感受对方的能量——对方话多你就多聊，话少就轻一点，开玩笑就接住玩笑\n- 不要像在做信息采集。你是来聊天的，不是来填表的\n- 如果不知道说什么，诚实比硬聊好\n- 不要说"最近怎么样""有什么新鲜事""今天过得咋样"这类废话';
+    userPrompt='以下是和'+name+'的对话记录：\n\n'+recentText+shortHint+'\n\n回复最后一条消息。注意：\n- 你不是在做问卷，不需要每轮提问\n- 忘了所有关于"短回答必须换话题""必须二选一"的规则\n- 像真人一样回应。对方开玩笑就笑，对方敷衍就说"看来你现在不太想聊这个"，对方认真就认真回\n- 具体例子：对方说"拉屎"→可以说"哈哈好吧，看来你现在不想聊正事。那我也不装了，你最近有什么想吐槽的吗？"\n- 不要说"最近怎么样"这类废话';
   }
   const body=JSON.stringify({model:'deepseek-chat',messages:[{role:'system',content:sysPrompt},{role:'user',content:userPrompt}],temperature:temperature,max_tokens:maxTokens});
   const apiReq=https.request({hostname:'api.deepseek.com',path:'/chat/completions',method:'POST',
