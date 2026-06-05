@@ -70,8 +70,8 @@ h1{text-align:center;font-size:28px;letter-spacing:2px;color:#a78bfa;margin-bott
 var chatHistory=[],report='';
 var G=function(id){return document.getElementById(id)};
 
-function load(){try{var d=JSON.parse(localStorage.getItem('personality_chat')||'{}');history=d.history||[];report=d.report||'';}catch(e){history=[];report='';}}
-function save(){localStorage.setItem('personality_chat',JSON.stringify({history:history,report:report}));}
+function load(){try{var d=JSON.parse(localStorage.getItem('personality_chat')||'{}');chatHistory=d.chatHistory||[];report=d.report||'';}catch(e){chatHistory=[];report='';}}
+function save(){localStorage.setItem('personality_chat',JSON.stringify({chatHistory:chatHistory,report:report}));}
 load();
 
 function render(){
@@ -97,7 +97,7 @@ function sendMsg(){
 
   fetch('/api/personality',{
     method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({history:history,name:'朋友',mode:chatHistory.length<=2?'start':'chat'})
+    body:JSON.stringify({chatHistory:chatHistory,name:'朋友',mode:chatHistory.length<=2?'start':'chat'})
   }).then(function(r){return r.json()}).then(function(j){
     if(j.code===200&&j.data){
       chatHistory.push({role:'ai',content:j.data.text});save();render();
@@ -110,7 +110,7 @@ function genReport(){
   var btn=G('reportBtn');btn.disabled=true;btn.textContent='⏳ 分析中…';
   fetch('/api/personality',{
     method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({history:history,name:'朋友',mode:'report'})
+    body:JSON.stringify({chatHistory:chatHistory,name:'朋友',mode:'report'})
   }).then(function(r){return r.json()}).then(function(j){
     if(j.code===200&&j.data){
       report=j.data.text;
@@ -122,7 +122,7 @@ function genReport(){
 
 function resetChat(){
   if(chatHistory.length&&!confirm('确定清除所有对话记录？'))return;
-  history=[];report='';save();render();
+  chatHistory=[];report='';save();render();
 }
 
 render();
