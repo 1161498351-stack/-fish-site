@@ -153,13 +153,15 @@ function aiPersonality(d,res){
   const sysPrompt='你是一个克制、直接的聊天观察助手。你只能基于用户在对话中明确说过的内容做观察。不得编造用户经历、爱好、性格。不得进行心理诊断。如果证据不足，必须说"目前信息不足"。聊天要像微信自然对话，不要尬笑，不要过度热情，不要重新自我介绍。';
   let userPrompt;
   if(mode==='start'){
-    userPrompt='用户昵称：'+name+'。请用一句自然的话打招呼，然后问一个轻松的日常问题。不要问隐私问题，不超过40字。';
+    userPrompt='用户昵称：'+name+'。说一句自然的问候（不要问"今天过得咋样""有啥新鲜事"这种万能问题），然后从下面选一个具体的方向问：工作内容、周末安排、饮食口味、运动习惯、音乐偏好。不超过35字。';
   }else if(mode==='report'){
     userPrompt='用户画像摘要：\n'+summary+'\n\n最近对话：\n'+recentText+'\n\n请生成人格观察报告。格式：\n【性格画像】3-5个关键词，每词配依据\n【沟通风格】简述+依据\n【行动倾向】简述+依据\n【压力反应】简述+依据\n【关系模式】简述+依据\n【MBTI倾向】只能写倾向（如"更接近ENFP/INFP"），不能写确定结论\n【证据来源】列出报告中每条判断对应的用户原话\n【不确定项】证据不足的地方\n\n要求：每个判断必须对应原话或摘要依据。不得编造。语气直接克制。';
   }else{
     var extraRule='';
-    if(shortCount>=2)extraRule='\n\n用户已经连续'+shortCount+'次回答很短。不要继续追问同一个方向。换成更轻的问题，或者给一个选择题式的提问（"A还是B？"）。';
-    userPrompt='用户画像摘要：\n'+summary+'\n\n最近对话：\n'+recentText+extraRule+'\n\n请回复用户最后一句话。规则：\n1.不要重新自我介绍\n2.不要编造\n3.如果用户回答短（"还行""没有""不知道"），换一个完全不同的话题方向追问——比如之前问工作就换成问休闲、之前问日常就换成问偏好\n4.绝对不要连续两次问类似的问题（比如刚问过"有啥新鲜事"，就别再问"最近咋样"）\n5.可以给二选一的问题（"周末喜欢宅还是出去？"）\n6.每次只说一件事，不超过40字';
+    if(shortCount>=2)extraRule='\n\n用户已经连续'+shortCount+'次回答很短。不要再追问了，给一个轻松的二选一选择题吧。';
+    var questionBank='可以问的方向（选一个没问过的）：工作内容、周末安排、饮食口味、运动习惯、音乐偏好、睡眠作息、社交偏好、消费习惯、童年记忆、理想生活、压力来源、成就感来源。';
+    if(shortCount>=2)questionBank='给一个二选一的选择题（比如"周末更喜欢宅着还是出去？"），不要开放性问题。';
+    userPrompt='用户画像摘要：\n'+summary+'\n\n最近对话：\n'+recentText+extraRule+'\n\n'+questionBank+'\n\n回复规则：\n1.不要重新自我介绍\n2.不要编造\n3.绝对不要重复最近两轮已经问过的话题方向\n4.用户回答短（<5字）就立刻换话题，用二选一的问题\n5.每次只说一件事，不超过35字';
   }
   const body=JSON.stringify({model:'deepseek-chat',messages:[{role:'system',content:sysPrompt},{role:'user',content:userPrompt}],temperature:0.75,max_tokens:mode==='report'?1200:200});
   const apiReq=https.request({hostname:'api.deepseek.com',path:'/chat/completions',method:'POST',
