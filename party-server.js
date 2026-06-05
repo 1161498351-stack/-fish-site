@@ -310,14 +310,14 @@ function playerDescribe(ws,text){
 
 function aiPersonality(d,res){
   const history=d.history||[],name=d.name||'朋友',mode=d.mode||'chat';
-  const sysPrompt='你是一位资深心理学专家，精通MBTI、大五人格、九型人格等分析工具。你通过轻松自然的聊天来了解一个人，而不是做问卷。你的风格：温暖、不评判、偶尔幽默，像一位阅历丰富的忘年交。每次回复2-4句话，控制在100字以内，像真人聊天。你心里有个清单需要逐步了解：工作状态、人际关系、压力应对、价值观、童年经历、理想生活，但不要直接审问，要在自然对话中慢慢覆盖。';
+  const sysPrompt='你是一位资深心理学专家，精通MBTI、大五人格等分析工具。你通过轻松自然的聊天来了解一个人，而不是做问卷。你的风格：温暖、不评判，像一位有阅历的朋友。铁律：①永远不要编造用户没说过的话，不要假设用户喜欢什么、有什么经历。②不确定某个话题用户是否聊过时，直接问，别脑补。③每次只问一件事，2-3句话，不要长篇大论。④如果用户纠正你的误解，立刻道歉并调整。你要逐步了解：工作状态、人际关系、压力应对、价值观、理想生活，但要自然引导，不要审问。';
   let userPrompt;
   if(mode==='start'){
-    userPrompt='你好！我叫'+name+'。请用一句温暖的话开始我们的人格探索之旅。简单介绍你自己，然后问我一个关于日常生活或工作的小问题。注意：不要提任何专业术语，不要像在做测试，就像朋友聊天一样自然。';
+    userPrompt='我是'+name+'。打个招呼，简单介绍你自己（一句话），然后问我一个关于日常生活或工作的小问题。语气随意，像微信上认识新朋友，别说什么"让我们开始人格探索之旅"这种尬话。';
   }else if(mode==='report'){
     userPrompt='基于我们的聊天记录，请给我一份详细的人格分析报告。务必引用对话中的原话来支撑你的分析。格式如下：\n\n【性格画像】用3-5个关键词概括，每个词配一句解释，尽量引用对话原话\n\n【MBTI推测】推测类型并解释，引用对话中的具体表现\n\n【优势领域】工作/人际/创造力等，结合对话中提到的实际情况\n\n【潜在盲区】2-3个可能需要留意的地方\n\n【成长建议】3条具体可行的建议\n\n【适合职业】推荐3-5个职业方向并解释原因\n\n【关系模式】在亲密关系和职场关系中可能的特点\n\n聊天记录：\n'+history.map(function(m){return m.role+': '+m.content}).join('\n')+'\n\n请生成报告，语言温暖真诚，引用对话原话时标出。';
   }else{
-    userPrompt='对话历史：\n'+history.map(function(m){return m.role+': '+m.content}).join('\n')+'\n\n请基于以上对话，自然地回应我。可以追问、分享见解、或者深入某个话题。目标是逐步了解我的性格。记住你还没覆盖到的维度，自然地引导过去。像朋友聊天，每次只说一件事，2-4句话，不要长篇大论。';
+    userPrompt='对话历史：\n'+history.map(function(m){return m.role+': '+m.content}).join('\n')+'\n\n回应规则：\n1. 只基于用户实际说过的话来回应，不要替他编造经历或爱好\n2. 如果你想了解某个方向但用户没提过，直接问——"对了，你平时周末喜欢干嘛？"这样\n3. 语气像微信聊天，简短自然，不要说"哈哈""哇"这种刻意热情的词\n4. 如果用户说得很少（就几个字），可以追问细节；如果用户说了一大段，挑一个点深入\n5. 每次只说一件事，2-3句话足够';
   }
   const body=JSON.stringify({model:'deepseek-chat',messages:[{role:'system',content:sysPrompt},{role:'user',content:userPrompt}],temperature:0.8,max_tokens:mode==='report'?1500:300});
   const apiReq=https.request({hostname:'api.deepseek.com',path:'/chat/completions',method:'POST',
