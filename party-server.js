@@ -192,7 +192,17 @@ function aiPersonality(d,res,req){
     for(var i=0;i<chatHistory.length;i++){
       messages.push({role:chatHistory[i].role==='ai'?'assistant':'user',content:chatHistory[i].content});
     }
-    messages.push({role:'user',content:'基于以上对话，生成人格观察报告。\n\n核心原则：\n- 你不是在诊断，是在观察。每个判断必须配证据、替代解释、置信度。\n- 单次表达=低置信度，多次重复+被确认=中置信度，明确自述=高置信度。\n- 禁止从单一信号直接跳到人格结论。例如："不想上班"不能直接判断为"逃避"——可能是工作不匹配、人际消耗、缺少自主权、只是短期疲惫等。\n- 不确定就说不确定。\n\n请按以下格式输出：\n\n【核心观察】2-3句话概括最突出的状态线索\n\n【逐条分析】每条按格式：\n观察点 → 证据（引用原话）→ 可能解释（2-3种）→ 不能直接判断 → 后续可确认\n\n【模式关联】多条线索之间的联系\n\n【置信度说明】高/中/低各列出\n\n【未覆盖区域】本次完全没聊到的维度\n\n【下一步建议】观察者接下来应该确认什么'});
+    // 注入前端匹配到的推理规则
+    var kbHints=d.kbHints||[];
+    var kbText='';
+    if(kbHints.length>0){
+      kbText='\n\n以下是从知识库中匹配到的推理规则，供参考：\n';
+      for(var k=0;k<kbHints.length;k++){
+        var r=kbHints[k];
+        kbText+='\n信号：'+r.signal.join('、')+'\n  → 可能解释：'+r.meanings.join(' / ')+'\n  → 不能直接判断为：'+r.not.join(' / ')+'\n  → 建议追问：'+r.ask.join(' / ')+'\n';
+      }
+    }
+    messages.push({role:'user',content:'基于以上对话，生成人格观察报告。\n\n核心原则：\n- 你不是在诊断，是在观察。每个判断必须配证据、替代解释、置信度。\n- 单次表达=低置信度，多次重复+被确认=中置信度，明确自述=高置信度。\n- 禁止从单一信号直接跳到人格结论。\n- 不确定就说不确定。\n'+kbText+'\n请按以下格式输出：\n\n【核心观察】2-3句话概括最突出的状态线索\n\n【逐条分析】每条按格式：\n观察点 → 证据（引用原话）→ 可能解释（2-3种）→ 不能直接判断 → 后续可确认\n\n【模式关联】多条线索之间的联系\n\n【置信度说明】高/中/低各列出\n\n【未覆盖区域】本次完全没聊到的维度\n\n【下一步建议】观察者接下来应该确认什么'});
   }else{
     temperature=0.85;maxTokens=400;
     // 把对话历史作为原生messages，模型能理解对话结构

@@ -171,12 +171,33 @@ function sendMsg(){
   }).finally(function(){input.disabled=false;btn.disabled=false;input.focus();});
 }
 
+// ═══════ 知识库匹配引擎 ═══════
+var kbRules=[],kbLoaded=false;
+fetch('/kb_rules.json').then(function(r){return r.json()}).then(function(d){kbRules=d;kbLoaded=true;}).catch(function(){});
+
+function matchKB(chatHistory){
+  if(!kbRules.length)return[];
+  // 提取用户所有发言
+  var userText=chatHistory.filter(function(m){return m.role==='user'}).map(function(m){return m.content}).join(' ');
+  var matched=[];
+  for(var i=0;i<kbRules.length;i++){
+    var rule=kbRules[i];
+    for(var j=0;j<rule.signal.length;j++){
+      if(userText.indexOf(rule.signal[j])>=0){
+        matched.push(rule);
+        break; // 匹配一次就够了
+      }
+    }
+  }
+  return matched;
+}
+
 function genReport(){
   if(!confirm('基于当前'+Math.floor(chatHistory.length/2)+'轮对话生成深度分析报告？'))return;
   var btn=G('reportBtn');btn.disabled=true;btn.textContent='⏳ 分析中…';
   fetch('/api/personality',{
     method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({chatHistory:chatHistory,name:'朋友',mode:'report'})
+    body:JSON.stringify({chatHistory:chatHistory,name:'朋友',mode:'report',kbHints:matched})
   }).then(function(r){return r.json()}).then(function(j){
     if(j.code===200&&j.data){
       report=j.data.text;
