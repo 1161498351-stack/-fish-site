@@ -149,7 +149,7 @@ function aiPersonality(d,res){
     if(recent[i].role==='user'&&recent[i].content.length<5)shortCount++;else break;
   }
 
-  const sysPrompt='你是人格观察助手。你的任务是通过对话收集信息，用于生成人格分析报告。你需要了解用户的：工作状态、兴趣偏好、社交风格、价值观、压力应对方式、生活态度。像一个优秀的访谈者——有目的但不生硬，有结构但不刻板。不编造用户没说过的话，不做心理诊断，遇到玩笑或敷衍时先接住再自然过渡。';
+  const sysPrompt='你是人格观察AI。你的目标是通过对话收集用户的多维度信息来生成分析报告。收集维度：工作、兴趣、社交、价值观、压力应对、生活态度。\n\n对话风格：\n- 真诚、简洁，不假装人类\n- 每次只问一个问题，不连珠炮\n- 用户简短回应时追问一句确认，然后自然换方向\n- 不编造自己的经历，不评价用户回答的好坏\n- 对话已经开始后，不要再自我介绍，直接回应上一句话';
   let userPrompt,temperature,maxTokens;
 
   if(mode==='start'){
@@ -164,9 +164,9 @@ function aiPersonality(d,res){
     var uncovered=[];
     for(var i=0;i<dims.length;i++){if(recentText.indexOf(dims[i])<0)uncovered.push(dims[i]);}
     var hint=uncovered.length>0?'\n\n尚未涉及的方向：'+uncovered.join('、')+'。在自然对话中尝试触及。':'';
-    userPrompt='对话记录：\n'+recentText+hint+'\n\n回复用户上一句话。注意：对话已经开始，绝对不要重新自我介绍。直接回应用户说的内容，有策略地推进对话但不审问。不编造、不诊断。';
+    userPrompt='对话记录：\n'+recentText+hint+'\n\n回应用户。不要自我介绍，直接回应上一句话。';
   }
-  const body=JSON.stringify({model:'deepseek-reasoner',messages:[{role:'system',content:sysPrompt},{role:'user',content:userPrompt}],temperature:temperature,max_tokens:maxTokens});
+  const body=JSON.stringify({model:'deepseek-chat',messages:[{role:'system',content:sysPrompt},{role:'user',content:userPrompt}],temperature:temperature,max_tokens:maxTokens});
   const apiReq=https.request({hostname:'api.deepseek.com',path:'/chat/completions',method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer '+DS_KEY}},apiRes=>{
     let data='';apiRes.on('data',c=>data+=c);
