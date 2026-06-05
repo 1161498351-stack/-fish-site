@@ -153,13 +153,13 @@ function aiPersonality(d,res){
   let userPrompt,temperature,maxTokens;
 
   if(mode==='start'){
-    temperature=0.85;maxTokens=200;
-    userPrompt='开始和'+name+'的人格探索对话。先简短自我介绍（你是人格观察助手），然后自然地问一个关于工作或日常生活的问题来打开话题。';
+    temperature=0.85;maxTokens=300;
+    userPrompt='开始和'+name+'的对话。一句话打招呼，然后问一个关于ta日常的问题。不要客套介绍，直接像认识新朋友一样聊。';
   }else if(mode==='report'){
-    temperature=0.55;maxTokens=1200;
+    temperature=0.55;maxTokens=2000;
     userPrompt='基于以下对话，生成人格观察报告。\n\n对话：\n'+recentText+'\n\n格式：\n【整体印象】2-3句话\n【性格特征】从对话中观察到的特点，每条引用用户原话\n【MBTI倾向】推测但不做确定结论\n【优势】\n【可探索的方向】\n【证据不足的地方】\n\n只基于对话实际内容，不要编造。';
   }else{
-    temperature=0.85;maxTokens=250;
+    temperature=0.85;maxTokens=400;
     var dims=['工作状态','兴趣偏好','社交风格','价值观','压力应对','生活态度'];
     var uncovered=[];
     for(var i=0;i<dims.length;i++){if(recentText.indexOf(dims[i])<0)uncovered.push(dims[i]);}
