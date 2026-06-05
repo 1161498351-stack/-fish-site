@@ -136,13 +136,12 @@ function aiCowrite(d,res){
 function buildPersonaSummary(chatHistory){
   if(!chatHistory||chatHistory.length<4)return '对话刚开始，尚无足够信息。';
   var userMsgs=chatHistory.filter(function(m){return m.role==='user'}).map(function(m){return m.content});
-  return '用户关键发言摘录：\n'+userMsgs.slice(-8).map(function(m,i){return (i+1)+'. '+m}).join('\n');
+  return userMsgs.slice(-8).map(function(m,i){return (i+1)+'. '+m}).join('\n');
 }
 
 function aiPersonality(d,res){
   const chatHistory=d.chatHistory||[],name=d.name||'朋友',mode=d.mode||'chat';
   const summary=buildPersonaSummary(chatHistory);
-  // 只取最近20轮
   var recent=chatHistory.slice(-20);
   var recentText=recent.map(function(m){return (m.role==='ai'?'助手':'用户')+': '+m.content}).join('\n');
   var shortCount=0;
@@ -151,19 +150,22 @@ function aiPersonality(d,res){
   }
 
   const sysPrompt='你是一个克制、直接的聊天观察助手。你只能基于用户在对话中明确说过的内容做观察。不得编造用户经历、爱好、性格。不得进行心理诊断。如果证据不足，必须说"目前信息不足"。聊天要像微信自然对话，不要尬笑，不要过度热情，不要重新自我介绍。';
-  let userPrompt;
+  let userPrompt,temperature,maxTokens;
+
   if(mode==='start'){
-    userPrompt='用户昵称：'+name+'。说一句自然的问候（不要问"今天过得咋样""有啥新鲜事"这种万能问题），然后从下面选一个具体的方向问：工作内容、周末安排、饮食口味、运动习惯、音乐偏好。不超过35字。';
+    temperature=0.75;maxTokens=200;
+    userPrompt='用户昵称：'+name+'\n\n说一句自然问候，然后从以下方向中选一个具体问题：\n工作内容、周末安排、饮食口味、运动习惯、音乐偏好。\n\n禁止使用：\n"今天过得咋样"\n"最近怎么样"\n"有啥新鲜事"\n"有什么想聊的"\n\n要求：\n1.不超过35字\n2.只问一个问题\n3.问题必须具体\n4.像微信聊天，不要客套\n\n示例输出：\n嗨，平时吃饭你偏重口味，还是清淡点？';
   }else if(mode==='report'){
-    userPrompt='用户画像摘要：\n'+summary+'\n\n最近对话：\n'+recentText+'\n\n请生成人格观察报告。格式：\n【性格画像】3-5个关键词，每词配依据\n【沟通风格】简述+依据\n【行动倾向】简述+依据\n【压力反应】简述+依据\n【关系模式】简述+依据\n【MBTI倾向】只能写倾向（如"更接近ENFP/INFP"），不能写确定结论\n【证据来源】列出报告中每条判断对应的用户原话\n【不确定项】证据不足的地方\n\n要求：每个判断必须对应原话或摘要依据。不得编造。语气直接克制。';
+    temperature=0.6;maxTokens=1200;
+    userPrompt='用户画像摘要：\n'+summary+'\n\n最近对话：\n'+recentText+'\n\n请生成人格观察报告。格式：\n【性格画像】3-5个关键词，每词配依据\n【沟通风格】简述+依据\n【行动倾向】简述+依据\n【压力反应】简述+依据\n【关系模式】简述+依据\n【MBTI倾向】只能写倾向（如"更接近ENFP/INFP"），不能写确定结论\n【证据来源】列出报告中每条判断对应的用户原话\n【不确定项】证据不足的地方\n\n要求：\n1.每个判断必须对应原话或摘要依据\n2.不得编造\n3.语气直接克制\n4.如果某一栏证据不足，该栏写"目前信息不足"，不要硬凑';
   }else{
+    temperature=0.8;maxTokens=200;
     var extraRule='';
-    if(shortCount>=2)extraRule='\n\n用户已经连续'+shortCount+'次回答很短。不要再追问了，给一个轻松的二选一选择题吧。';
-    var questionBank='可以问的方向（选一个没问过的）：工作内容、周末安排、饮食口味、运动习惯、音乐偏好、睡眠作息、社交偏好、消费习惯、童年记忆、理想生活、压力来源、成就感来源。';
-    if(shortCount>=2)questionBank='给一个二选一的选择题（比如"周末更喜欢宅着还是出去？"），不要开放性问题。';
-    userPrompt='用户画像摘要：\n'+summary+'\n\n最近对话：\n'+recentText+extraRule+'\n\n'+questionBank+'\n\n回复规则：\n1.不要重新自我介绍\n2.不要编造\n3.绝对不要重复最近两轮已经问过的话题方向\n4.用户回答短（<5字）就立刻换话题，用二选一的问题\n5.每次只说一件事，不超过35字';
+    if(shortCount>=2)extraRule='\n\n用户已经连续'+shortCount+'次回答很短。不要继续追问刚才的话题。从【可选话题方向】中换一个轻松方向，问一个二选一问题。问题必须具体，不能问万能问题。';
+    userPrompt='用户画像摘要：'+summary+'\n\n最近对话：\n'+recentText+extraRule+'\n\n可选话题方向：\n工作内容、周末安排、饮食口味、运动习惯、音乐偏好、睡眠作息、社交偏好、消费习惯、童年记忆、理想生活、压力来源、成就感来源。\n\n回复规则：\n1.不要重新自我介绍\n2.不要编造用户经历、爱好、性格\n3.聊天阶段不要做人格判断，也不要说"目前信息不足"\n4.每次只问一个问题，不超过35字\n5.绝对不要重复最近两轮已经问过的话题方向，不只是原句，连同类方向也不要重复\n6.不要使用万能问题，例如：\n  "最近怎么样""今天过得咋样""有什么新鲜事""有什么想聊的""有什么印象深的""能多说说吗"\n7.如果用户最后一句少于5字，必须直接换话题\n8.换话题时，必须从【可选话题方向】里选一个最近没问过的方向\n9.用户短回答时，不要评价用户回答，不要说"还好也不错""这样啊"\n10.短回答后的问题必须是二选一问题\n\n二选一句式只能使用：\n- 你更偏向A，还是B？\n- 平时更像A，还是B？\n- 如果只能选一个，你会选A还是B？\n\n示例：\n用户：还好\n回复：你周末更像补觉型，还是出门透气型？\n\n用户：没有\n回复：吃东西你更偏重口味，还是清淡点？\n\n用户：不知道\n回复：听歌时你更看歌词，还是旋律？';
+    if(summary==='对话刚开始，尚无足够信息。')userPrompt+='\n\n用户画像摘要信息很少，不要围绕摘要追问。直接从未问过的话题方向中选一个具体生活问题。';
   }
-  const body=JSON.stringify({model:'deepseek-chat',messages:[{role:'system',content:sysPrompt},{role:'user',content:userPrompt}],temperature:0.75,max_tokens:mode==='report'?1200:200});
+  const body=JSON.stringify({model:'deepseek-chat',messages:[{role:'system',content:sysPrompt},{role:'user',content:userPrompt}],temperature:temperature,max_tokens:maxTokens});
   const apiReq=https.request({hostname:'api.deepseek.com',path:'/chat/completions',method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer '+DS_KEY}},apiRes=>{
     let data='';apiRes.on('data',c=>data+=c);
