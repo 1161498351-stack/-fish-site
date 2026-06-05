@@ -149,20 +149,18 @@ function aiPersonality(d,res){
     if(recent[i].role==='user'&&recent[i].content.length<5)shortCount++;else break;
   }
 
-  const sysPrompt='你和朋友在微信上闲聊。记住：你不是客服、不是访谈者、不是问卷机器人。你是来聊天的，不是来提取信息的。朋友说什么你都可以接——包括粗话、敷衍、玩笑。对方说"拉屎"你就笑，说"不知道"你就换个轻松话题，说了一大段就认真回。不要在脑子里跑规则——你唯一的规则就是像一个真人。';
+  const sysPrompt='你是一个正在和朋友微信聊天的人。不是客服，不是AI助手，不是访谈者。就是一个人。你每次回复就是你在对话中的下一句话。不需要每句都提问，不需要引导，不需要套信息。对方说什么你都自然地接。';
   let userPrompt,temperature,maxTokens;
 
   if(mode==='start'){
-    temperature=0.85;maxTokens=200;
-    userPrompt='你将和'+name+'开始一段对话。自然地打个招呼，简短介绍自己（你是喜欢通过聊天了解人的观察者），然后根据对方的反应灵活聊下去。不要用模板化的开场白，不要像客服。像认识新朋友一样。可以分享一点自己的风格，让对方感觉你在认真对待这次对话。';
+    temperature=0.9;maxTokens=200;
+    userPrompt='你和'+name+'刚开始聊天。打个自然的招呼。';
   }else if(mode==='report'){
     temperature=0.55;maxTokens=1200;
-    userPrompt='以下是和'+name+'的完整对话。请基于对话内容生成一份人格观察报告。\n\n对话记录：\n'+recentText+'\n\n报告格式：\n【整体印象】你对这个人的直观感受（2-3句话）\n【性格特征】从对话中观察到的性格特点，每条都要引用对话原话作为依据\n【MBTI倾向】推测可能的类型倾向（注意：只写倾向，不写确定结论。证据不足就说不足）\n【优势与盲区】基于对话的观察\n【证据不足的地方】明确列出哪些方面信息不够\n\n核心要求：只能基于对话中实际出现的内容。不要编造。不要把倾向写成结论。语气像一个有洞察力的朋友在分享观察，不要像诊断报告。';
+    userPrompt='以下是和'+name+'的对话。基于对话写一份观察报告。只基于对话中实际出现的原话做判断，不要编造，证据不足就说不足。\n\n对话：\n'+recentText;
   }else{
-    temperature=0.95;maxTokens=250;
-    var shortHint='';
-    if(shortCount>=2)shortHint='\n\n注意：对方已经连续简短回复了几次。不要继续在同一个方向上追问。自然地换个话题，或者分享一点相关的个人观察来打破僵局。保持轻松，不要施压。';
-    userPrompt='以下是和'+name+'的对话记录：\n\n'+recentText+shortHint+'\n\n回复最后一条消息。注意：\n- 你不是在做问卷，不需要每轮提问\n- 忘了所有关于"短回答必须换话题""必须二选一"的规则\n- 像真人一样回应。对方开玩笑就笑，对方敷衍就说"看来你现在不太想聊这个"，对方认真就认真回\n- 具体例子：对方说"拉屎"→可以说"哈哈好吧，看来你现在不想聊正事。那我也不装了，你最近有什么想吐槽的吗？"\n- 不要说"最近怎么样"这类废话';
+    temperature=0.9;maxTokens=250;
+    userPrompt='和'+name+'的对话：\n\n'+recentText+'\n\n回复下一句。';
   }
   const body=JSON.stringify({model:'deepseek-chat',messages:[{role:'system',content:sysPrompt},{role:'user',content:userPrompt}],temperature:temperature,max_tokens:maxTokens});
   const apiReq=https.request({hostname:'api.deepseek.com',path:'/chat/completions',method:'POST',
