@@ -149,18 +149,22 @@ function aiPersonality(d,res){
     if(recent[i].role==='user'&&recent[i].content.length<5)shortCount++;else break;
   }
 
-  const sysPrompt='你是一个正在和朋友微信聊天的人。不是客服，不是AI助手，不是访谈者。就是一个人。你每次回复就是你在对话中的下一句话。不需要每句都提问，不需要引导，不需要套信息。对方说什么你都自然地接。';
+  const sysPrompt='你是人格观察助手。你的任务是通过对话收集信息，用于生成人格分析报告。你需要了解用户的：工作状态、兴趣偏好、社交风格、价值观、压力应对方式、生活态度。像一个优秀的访谈者——有目的但不生硬，有结构但不刻板。不编造用户没说过的话，不做心理诊断，遇到玩笑或敷衍时先接住再自然过渡。';
   let userPrompt,temperature,maxTokens;
 
   if(mode==='start'){
-    temperature=0.9;maxTokens=200;
-    userPrompt='你和'+name+'刚开始聊天。打个自然的招呼。';
+    temperature=0.85;maxTokens=200;
+    userPrompt='开始和'+name+'的人格探索对话。先简短自我介绍（你是人格观察助手），然后自然地问一个关于工作或日常生活的问题来打开话题。';
   }else if(mode==='report'){
     temperature=0.55;maxTokens=1200;
-    userPrompt='以下是和'+name+'的对话。基于对话写一份观察报告。只基于对话中实际出现的原话做判断，不要编造，证据不足就说不足。\n\n对话：\n'+recentText;
+    userPrompt='基于以下对话，生成人格观察报告。\n\n对话：\n'+recentText+'\n\n格式：\n【整体印象】2-3句话\n【性格特征】从对话中观察到的特点，每条引用用户原话\n【MBTI倾向】推测但不做确定结论\n【优势】\n【可探索的方向】\n【证据不足的地方】\n\n只基于对话实际内容，不要编造。';
   }else{
-    temperature=0.9;maxTokens=250;
-    userPrompt='和'+name+'的对话：\n\n'+recentText+'\n\n回复下一句。';
+    temperature=0.85;maxTokens=250;
+    var dims=['工作状态','兴趣偏好','社交风格','价值观','压力应对','生活态度'];
+    var covered=[];
+    for(var i=0;i<dims.length;i++){if(recentText.indexOf(dims[i])<0){covered.push(dims[i]);}}
+    var uncovered=covered.length>0?'\n\n尚未涉及的方向：'+covered.join('、')+'\n在自然对话中尝试触及这些方向，但不要直接审问。':'';
+    userPrompt='对话记录：\n'+recentText+uncovered+'\n\n回复用户。要求：\n- 有策略地推进对话，逐步覆盖人格分析需要的维度\n- 但不要像问卷——在自然交流中引导\n- 如果用户开玩笑或敷衍，先接住再过渡\n- 不编造、不诊断';
   }
   const body=JSON.stringify({model:'deepseek-chat',messages:[{role:'system',content:sysPrompt},{role:'user',content:userPrompt}],temperature:temperature,max_tokens:maxTokens});
   const apiReq=https.request({hostname:'api.deepseek.com',path:'/chat/completions',method:'POST',
