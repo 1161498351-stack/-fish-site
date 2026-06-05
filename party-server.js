@@ -3,7 +3,7 @@ const http=require('http'),https=require('https'),fs=require('fs'),path=require(
 
 const PORT=process.env.PORT||8899,ROOT=__dirname;
 const MIME={'.html':'text/html;charset=utf-8','.js':'application/javascript','.css':'text/css','.png':'image/png','.jpg':'image/jpeg'};
-const DS_KEY=process.env.DS_KEY||(function(){try{return fs.readFileSync(path.join(__dirname,'key.txt'),'utf8').trim()}catch(e){return''}})();
+const DS_KEY=(process.env.DS_KEY||'').trim()||(function(){try{return fs.readFileSync(path.join(__dirname,'key.txt'),'utf8').trim()}catch(e){return''}})();
 
 // ═══════ 游戏状态 ═══════
 const rooms=new Map(); // roomId -> {players:{id,name,role,word,ready,alive,votes},host,status:'waiting'|'playing'|'voting'|'end',round,wordPair}
@@ -28,7 +28,7 @@ const server=http.createServer((req,res)=>{
     req.on('data',c=>body+=c);
     req.on('end',()=>{
       try{const d=JSON.parse(body);aiFortune(d,res);}
-      catch(e){res.writeHead(400);res.end(JSON.stringify({error:e.message,body:body.slice(0,80)}));}
+      catch(e){res.writeHead(400);res.end(JSON.stringify({error:'请求格式错误'}));}
     });
     return;
   }
@@ -40,7 +40,7 @@ const server=http.createServer((req,res)=>{
     req.on('data',c=>body+=c);
     req.on('end',()=>{
       try{const d=JSON.parse(body);aiCowrite(d,res);}
-      catch(e){res.writeHead(400);res.end(JSON.stringify({error:e.message,body:body.slice(0,80)}));}
+      catch(e){res.writeHead(400);res.end(JSON.stringify({error:'请求格式错误'}));}
     });
     return;
   }
