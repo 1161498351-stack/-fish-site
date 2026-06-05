@@ -81,8 +81,8 @@ function render(){
   }else{
     log.innerHTML=chatHistory.map(function(m){return'<div class="chat-msg '+m.role+'">'+m.content+'<div class="time">'+(m.role==='ai'?'分析师':'你')+'</div></div>';}).join('');
   }
-  G('roundCount').textContent=chatHistory.length?'已聊 '+Math.floor(chatHistory.length/2)+' 轮 · '+(chatHistory.length<8?'多聊聊分析更准':'聊得差不多了，可以生成报告'):'开始聊天吧';
-  G('reportBtn').disabled=chatHistory.length<6;
+  G('roundCount').textContent=chatHistory.length?'已聊 '+Math.floor(chatHistory.length/2)+' 轮 · '+(chatHistory.length<12?'至少需要6轮对话才能生成有参考价值的报告':'聊得差不多了，可以生成报告'):'开始聊天吧';
+  G('reportBtn').disabled=chatHistory.length<2; // 至少聊过就允许点
   scrollBottom();
 }
 

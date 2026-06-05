@@ -293,7 +293,7 @@ function renderPanel(){
       '</div>'+
       '<div class="pchat-btns">'+
         '<button class="send-btn" id="pSendBtn" onclick="sendPersonalityMsg()">💬 发送</button>'+
-        '<button class="report-btn" id="pReportBtn" onclick="generateReport()"'+(ph.history.length<4?' disabled':'')+'>📊 生成报告</button>'+
+        '<button class="report-btn" id="pReportBtn" onclick="generateReport()"'+(ph.history.length<2?' disabled':'')+'>📊 生成报告</button>'+
       '</div>'+
       '<div style="font-size:10px;color:#bbb;text-align:center">已聊 '+ph.history.length+' 轮 · 聊得越多分析越准</div>'+
     '</div>';
