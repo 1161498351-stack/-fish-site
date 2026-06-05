@@ -192,7 +192,7 @@ function aiPersonality(d,res,req){
     for(var i=0;i<chatHistory.length;i++){
       messages.push({role:chatHistory[i].role==='ai'?'assistant':'user',content:chatHistory[i].content});
     }
-    messages.push({role:'user',content:'基于以上对话，生成人格观察报告。如果对话信息太少（覆盖的话题方向少于3个），直接告诉我还需要聊哪些方向。如果信息够了，按这个格式输出：【整体印象】【性格特征-每条引用原话】【MBTI倾向-不确定就写不确定】【优势】【需要更多信息的地方】。只基于对话实际内容。'});
+    messages.push({role:'user',content:'基于以上对话，生成人格观察报告。先判断：对话中是否收集到了用户足够的"为什么"和具体经历，而不仅仅是表面偏好？如果多数回答都是"我喜欢A""我选B"这种没有展开的简短表态，直接告诉用户目前的信息深度不够，并建议具体的话题方向。如果确实有足够深入的对话内容，再输出报告：【整体印象】【性格特征-每条引用原话】【MBTI倾向】【优势】【需要更多信息的地方】。只基于对话实际内容。'});
   }else{
     temperature=0.85;maxTokens=400;
     // 把对话历史作为原生messages，模型能理解对话结构
@@ -203,7 +203,7 @@ function aiPersonality(d,res,req){
     var uncovered=[];
     for(var i=0;i<dims.length;i++){if(recentText.indexOf(dims[i])<0)uncovered.push(dims[i]);}
     var hint=uncovered.length>0?'尚未触及的维度：'+uncovered.join('、')+'' :'';
-    messages.push({role:'user',content:(hint?'[待覆盖的维度：'+hint+'] ':'')+'你的任务是通过对话了解这个人。回应上一条，同时自然地推进对话，逐步覆盖待收集的维度。'});
+    messages.push({role:'user',content:(hint?'[待覆盖维度：'+hint+'] ':'')+'回应上一条。如果对方刚给了一个表面回答（比如"钱多事少""喜欢打游戏"），先追问一句为什么、是什么吸引他、或者背后的故事，再考虑是否切换方向。深度优先于广度。'});
   }
   const body=JSON.stringify({model:'deepseek-chat',messages:messages,temperature:temperature,max_tokens:maxTokens});
   const apiReq=https.request({hostname:'api.deepseek.com',path:'/chat/completions',method:'POST',
