@@ -185,7 +185,7 @@ function aiPersonality(d,res){
   apiReq.write(body);apiReq.end();
 }
 
-function checkAllDescribed(room){function checkAllDescribed(room){
+function checkAllDescribed(room){
   const alive=Object.values(room.players).filter(x=>x.alive);
   if(alive.every(x=>x.described)&&room.status==='describing'){
     room.status='voting';
