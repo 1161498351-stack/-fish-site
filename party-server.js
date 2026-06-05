@@ -28,7 +28,7 @@ const server=http.createServer((req,res)=>{
     req.on('data',c=>body+=c);
     req.on('end',()=>{
       try{const d=JSON.parse(body);aiFortune(d,res);}
-      catch(e){res.writeHead(400);res.end(JSON.stringify({error:'参数错误'}));}
+      catch(e){res.writeHead(400);res.end(JSON.stringify({error:e.message,body:body.slice(0,80)}));}
     });
     return;
   }
@@ -40,7 +40,7 @@ const server=http.createServer((req,res)=>{
     req.on('data',c=>body+=c);
     req.on('end',()=>{
       try{const d=JSON.parse(body);aiCowrite(d,res);}
-      catch(e){res.writeHead(400);res.end(JSON.stringify({error:'参数错误'}));}
+      catch(e){res.writeHead(400);res.end(JSON.stringify({error:e.message,body:body.slice(0,80)}));}
     });
     return;
   }
