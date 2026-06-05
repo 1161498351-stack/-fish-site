@@ -159,7 +159,7 @@ function aiPersonality(d,res){
   }else{
     var extraRule='';
     if(shortCount>=2)extraRule='\n\n用户已经连续'+shortCount+'次回答很短。不要继续追问同一个方向。换成更轻的问题，或者给一个选择题式的提问（"A还是B？"）。';
-    userPrompt='用户画像摘要：\n'+summary+'\n\n最近对话：\n'+recentText+extraRule+'\n\n请回复用户最后一句话。规则：1.不要重新自我介绍 2.不要编造 3.如果用户回答短就换个角度轻轻追问 4.不要连续追问超过2次 5.每次只问一个问题 6.回复不超过60字。';
+    userPrompt='用户画像摘要：\n'+summary+'\n\n最近对话：\n'+recentText+extraRule+'\n\n请回复用户最后一句话。规则：\n1.不要重新自我介绍\n2.不要编造\n3.如果用户回答短（"还行""没有""不知道"），换一个完全不同的话题方向追问——比如之前问工作就换成问休闲、之前问日常就换成问偏好\n4.绝对不要连续两次问类似的问题（比如刚问过"有啥新鲜事"，就别再问"最近咋样"）\n5.可以给二选一的问题（"周末喜欢宅还是出去？"）\n6.每次只说一件事，不超过40字';
   }
   const body=JSON.stringify({model:'deepseek-chat',messages:[{role:'system',content:sysPrompt},{role:'user',content:userPrompt}],temperature:0.75,max_tokens:mode==='report'?1200:200});
   const apiReq=https.request({hostname:'api.deepseek.com',path:'/chat/completions',method:'POST',
