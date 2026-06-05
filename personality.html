@@ -126,7 +126,18 @@ function resetChat(){
 }
 
 render();
-setTimeout(function(){G('chatInput').focus();},300);
+// 如果聊天为空，AI 先说第一句话
+if(!chatHistory.length){
+  setTimeout(function(){
+    G('sendBtn').disabled=true;
+    fetch('/api/personality',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({history:[],name:'朋友',mode:'start'})})
+    .then(function(r){return r.json()}).then(function(j){
+      if(j.code===200&&j.data){chatHistory.push({role:'ai',content:j.data.text});save();render();}
+    }).finally(function(){G('sendBtn').disabled=false;G('chatInput').focus();});
+  },400);
+} else {
+  setTimeout(function(){G('chatInput').focus();},300);
+}
 </script>
 </body>
 </html>
