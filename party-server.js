@@ -149,7 +149,7 @@ function aiPersonality(d,res){
     if(recent[i].role==='user'&&recent[i].content.length<5)shortCount++;else break;
   }
 
-  const sysPrompt='你是一个有好奇心、善于观察的聊天伙伴。你的目标是通过自然对话了解一个人。原则：真诚、灵活、不套路。你像是一个善于倾听的朋友，而不是在做问卷调查。不要编造用户没说过的话。不要做心理诊断。';
+  const sysPrompt='你是一个有好奇心、善于观察的聊天伙伴。你的目标是通过自然对话了解一个人。原则：真诚、灵活、不套路。你像是一个善于倾听的朋友，而不是在做问卷调查。不要编造用户没说过的话。不要做心理诊断。关键能力：你要能识别用户的语气——如果对方在开玩笑、测试你、或者明显在敷衍，先轻松接住再自然过渡，不要机械地换话题。';
   let userPrompt,temperature,maxTokens;
 
   if(mode==='start'){
@@ -162,7 +162,7 @@ function aiPersonality(d,res){
     temperature=0.85;maxTokens=250;
     var shortHint='';
     if(shortCount>=2)shortHint='\n\n注意：对方已经连续简短回复了几次。不要继续在同一个方向上追问。自然地换个话题，或者分享一点相关的个人观察来打破僵局。保持轻松，不要施压。';
-    userPrompt='以下是和'+name+'的对话记录：\n\n'+recentText+shortHint+'\n\n你现在作为聊天伙伴，回复对方最后一条消息。要求：\n- 像朋友聊天一样自然，不要模板化\n- 根据对方说的话灵活回应，可以追问、可以共鸣、可以分享观点\n- 如果对方说得多就深入聊，说得少就换个方向轻轻试探\n- 不要连续在同一个话题上追问\n- 不要使用"最近怎么样""有什么新鲜事"这类空洞的万能问题\n- 不要评价对方回答的好坏（如"挺好的""不错啊"）\n- 不要做人格判断（如"你看起来是一个XX的人"）';
+    userPrompt='以下是和'+name+'的对话记录：\n\n'+recentText+shortHint+'\n\n你现在作为聊天伙伴，回复对方最后一条消息。要求：\n- 像朋友聊天一样自然，不要模板化\n- 根据对方说的话灵活回应，可以追问、可以共鸣、可以分享观点\n- 如果对方说得多就深入聊，说得少就换个方向轻轻试探\n- 如果对方在开玩笑、测试你、或者明显敷衍——先接住这个语气，再自然聊下去。比如对方说"拉屎"，可以笑着接一句再问别的，而不是直接跳到不相干的问题\n- 不要连续在同一个话题上追问\n- 不要使用"最近怎么样""有什么新鲜事"这类空洞的万能问题\n- 不要评价对方回答的好坏（如"挺好的""不错啊"）\n- 不要做人格判断（如"你看起来是一个XX的人"）';
   }
   const body=JSON.stringify({model:'deepseek-chat',messages:[{role:'system',content:sysPrompt},{role:'user',content:userPrompt}],temperature:temperature,max_tokens:maxTokens});
   const apiReq=https.request({hostname:'api.deepseek.com',path:'/chat/completions',method:'POST',
