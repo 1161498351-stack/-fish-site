@@ -203,7 +203,7 @@ function aiPersonality(d,res,req){
     var uncovered=[];
     for(var i=0;i<dims.length;i++){if(recentText.indexOf(dims[i])<0)uncovered.push(dims[i]);}
     var hint=uncovered.length>0?'尚未触及的维度：'+uncovered.join('、')+'' :'';
-    messages.push({role:'user',content:(hint?'[待覆盖维度：'+hint+'] ':'')+'回应上一条。如果对方刚给了一个表面回答（比如"钱多事少""喜欢打游戏"），先追问一句为什么、是什么吸引他、或者背后的故事，再考虑是否切换方向。深度优先于广度。'});
+    messages.push({role:'user',content:(hint?'[待覆盖维度：'+hint+'] ':'')+'回应上一条。深度优先：追问"为什么"比切换话题更重要。当你感觉已经了解了对方的多个侧面、信息足够形成判断时，在对话中自然地告诉对方"我觉得聊得差不多了，可以试试生成报告了"。不要用固定轮数判断。'});
   }
   const body=JSON.stringify({model:'deepseek-chat',messages:messages,temperature:temperature,max_tokens:maxTokens});
   const apiReq=https.request({hostname:'api.deepseek.com',path:'/chat/completions',method:'POST',
