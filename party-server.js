@@ -161,12 +161,12 @@ function aiPersonality(d,res){
   }else{
     temperature=0.85;maxTokens=250;
     var dims=['工作状态','兴趣偏好','社交风格','价值观','压力应对','生活态度'];
-    var covered=[];
-    for(var i=0;i<dims.length;i++){if(recentText.indexOf(dims[i])<0){covered.push(dims[i]);}}
-    var uncovered=covered.length>0?'\n\n尚未涉及的方向：'+covered.join('、')+'\n在自然对话中尝试触及这些方向，但不要直接审问。':'';
-    userPrompt='对话记录：\n'+recentText+uncovered+'\n\n回复用户。要求：\n- 有策略地推进对话，逐步覆盖人格分析需要的维度\n- 但不要像问卷——在自然交流中引导\n- 如果用户开玩笑或敷衍，先接住再过渡\n- 不编造、不诊断';
+    var uncovered=[];
+    for(var i=0;i<dims.length;i++){if(recentText.indexOf(dims[i])<0)uncovered.push(dims[i]);}
+    var hint=uncovered.length>0?'\n\n尚未涉及的方向：'+uncovered.join('、')+'。在自然对话中尝试触及。':'';
+    userPrompt='对话记录：\n'+recentText+hint+'\n\n回复用户上一句话。注意：对话已经开始，绝对不要重新自我介绍。直接回应用户说的内容，有策略地推进对话但不审问。不编造、不诊断。';
   }
-  const body=JSON.stringify({model:'deepseek-chat',messages:[{role:'system',content:sysPrompt},{role:'user',content:userPrompt}],temperature:temperature,max_tokens:maxTokens});
+  const body=JSON.stringify({model:'deepseek-reasoner',messages:[{role:'system',content:sysPrompt},{role:'user',content:userPrompt}],temperature:temperature,max_tokens:maxTokens});
   const apiReq=https.request({hostname:'api.deepseek.com',path:'/chat/completions',method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer '+DS_KEY}},apiRes=>{
     let data='';apiRes.on('data',c=>data+=c);
