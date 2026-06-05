@@ -210,7 +210,7 @@ function aiPersonality(d,res,req){
       life:'重点分析价值观排序、生活哲学、意义感来源、理想生活画面',
       stress:'重点分析压力来源、应对机制、恢复方式、情绪调节模式'};
     var focusText=focusGuide[focus]||focusGuide.all;
-    messages.push({role:'user',content:'基于以上对话，生成人格观察报告。\n\n用户选择了报告焦点：'+focusText+'\n请聚焦这个方向深入分析，其他维度可以简要提及或不提。\n\n核心原则：\n- 你不是在诊断，是在观察。每个判断必须配证据、替代解释、置信度。\n- 单次表达=低置信度，多次重复+被确认=中置信度，明确自述=高置信度。\n- 禁止从单一信号直接跳到人格结论。\n- 不确定就说不确定。\n'+kbText+'\n请按以下格式输出：\n\n【核心观察】2-3句话概括\n\n【逐条分析】每条按格式：\n观察点 → 证据（引用原话）→ 可能解释（2-3种）→ 不能直接判断 → 后续可确认\n\n【模式关联】\n\n【置信度说明】高/中/低\n\n【未覆盖区域】\n\n【下一步建议】'});
+    messages.push({role:'user',content:'基于以上对话，生成人格观察报告。\n\n用户选择了报告焦点：'+focusText+'\n请聚焦这个方向深入分析，其他维度可以简要提及或不提。\n\n核心原则：\n- 你不是在诊断，是在观察。每个判断必须配证据、替代解释、置信度。\n- 单次表达=低置信度，多次重复+被确认=中置信度，明确自述=高置信度。\n- 禁止从单一信号直接跳到人格结论。\n- 不确定就说不确定。\n'+kbText+'\n请按以下格式输出：\n\n【核心观察】2-3句话概括\n\n【逐条分析】每条按格式：\n观察点 → 证据（引用原话）→ 可能解释（2-3种）→ 不能直接判断 → 后续可确认\n\n【模式关联】\n\n【置信度说明】高/中/低\n\n【未覆盖区域】\n\n【下一步建议】\n\n【综合判断】基于以上所有观察，运用心理学框架做整合结论。不是重复清单，而是回答一个问题：这个人的心理状态和行为模式，整体上到底是怎么样的？用专业但不生硬的语言，像一位有经验的心理观察者在做总结。250字以上。'});
   }else{
     temperature=0.85;maxTokens=400;
     // 把对话历史作为原生messages，模型能理解对话结构
@@ -221,7 +221,7 @@ function aiPersonality(d,res,req){
     var uncovered=[];
     for(var i=0;i<dims.length;i++){if(recentText.indexOf(dims[i])<0)uncovered.push(dims[i]);}
     var hint=uncovered.length>0?'尚未触及的维度：'+uncovered.join('、')+'' :'';
-    messages.push({role:'user',content:(hint?'[待覆盖维度：'+hint+'] ':'')+'回应上一条。深度优先：追问"为什么"比切换话题更重要。当你感觉已经了解了对方的多个侧面、信息足够形成判断时，在对话中自然地告诉对方"我觉得聊得差不多了，可以试试生成报告了"。不要用固定轮数判断。'});
+    messages.push({role:'user',content:(hint?'[待覆盖维度：'+hint+'] ':'')+'回应上一条。记住你的最终任务是为综合判断收集足够素材——不只是表面偏好，而是一个人的行为模式、内心逻辑、情感反应方式。深度优先，追问"为什么"比切换话题更重要。当信息足够形成有深度的结论时，自然告诉对方可以试试生成报告。'});
   }
   const body=JSON.stringify({model:'deepseek-chat',messages:messages,temperature:temperature,max_tokens:maxTokens});
   const apiReq=https.request({hostname:'api.deepseek.com',path:'/chat/completions',method:'POST',

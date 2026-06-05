@@ -108,7 +108,7 @@ h1{text-align:center;font-size:28px;letter-spacing:2px;color:#a78bfa;margin-bott
 <div class="round-count" id="roundCount">开始聊天吧</div>
 
 <div class="input-row">
-  <textarea id="chatInput" placeholder="说说你自己…比如你做什么工作？平时喜欢干嘛？" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg()}"></textarea>
+  <textarea id="chatInput" name="chat" autocomplete="on" placeholder="说说你自己…比如你做什么工作？平时喜欢干嘛？" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg()}"></textarea>
 </div>
 <div class="btn-row">
   <button class="btn primary" id="sendBtn" onclick="sendMsg()">💬 发送</button>
