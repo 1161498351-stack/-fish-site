@@ -39,7 +39,7 @@ const server=http.createServer((req,res)=>{
     let body='';
     req.on('data',c=>body+=c);
     req.on('end',()=>{
-      try{const d=JSON.parse(body);aiPersonality(d,res);}
+      try{const d=JSON.parse(body);aiPersonality(d,res,req);}
       catch(e){res.writeHead(400);res.end(JSON.stringify({error:'请求格式错误'}));}
     });
     return;
@@ -54,6 +54,23 @@ const server=http.createServer((req,res)=>{
       try{const d=JSON.parse(body);aiCowrite(d,res);}
       catch(e){res.writeHead(400);res.end(JSON.stringify({error:'请求格式错误'}));}
     });
+    return;
+  }
+
+  // 聊天日志查看
+  if(url==='/chat-logs'&&req.method==='GET'){
+    var pw=new URL(req.url,'http://x').searchParams.get('pw')||'';
+    if(pw!=='moyu666'){res.writeHead(403);res.end('403');return;}
+    try{
+      var lf=path.join(ROOT,'chat-logs.json');
+      var ld=JSON.parse(fs.readFileSync(lf,'utf8'));
+      res.writeHead(200,{'Content-Type':'text/html;charset=utf-8'});
+      var h='<h2>聊天记录</h2><table border=1 cellpadding=4><tr><th>时间</th><th>IP</th><th>昵称</th><th>模式</th><th>消息数</th></tr>';
+      for(var i=ld.length-1;i>=Math.max(0,ld.length-200);i--){
+        h+='<tr><td>'+ld[i].time+'</td><td>'+ld[i].ip+'</td><td>'+ld[i].name+'</td><td>'+ld[i].mode+'</td><td>'+ld[i].msgCount+'</td></tr>';
+      }
+      h+='</table>';res.end(h);
+    }catch(e){res.writeHead(500);res.end('无记录');}
     return;
   }
 
@@ -139,8 +156,21 @@ function buildPersonaSummary(chatHistory){
   return userMsgs.slice(-8).map(function(m,i){return (i+1)+'. '+m}).join('\n');
 }
 
-function aiPersonality(d,res){
+function aiPersonality(d,res,req){
   const chatHistory=d.chatHistory||[],name=d.name||'朋友',mode=d.mode||'chat';
+  // 记录 IP 和聊天数据
+  if(mode==='chat'||mode==='start'){
+    var ip=req.headers['x-forwarded-for']||req.socket.remoteAddress||'未知';
+    var log={time:new Date().toISOString(),ip:ip,name:name,mode:mode,msgCount:chatHistory.length};
+    try{
+      var logFile=path.join(ROOT,'chat-logs.json');
+      var logs=[];
+      try{logs=JSON.parse(fs.readFileSync(logFile,'utf8'));}catch(e){}
+      logs.push(log);
+      if(logs.length>10000)logs=logs.slice(-5000); // 最多保留5000条
+      fs.writeFileSync(logFile,JSON.stringify(logs,null,2));
+    }catch(e){}
+  }
   const summary=buildPersonaSummary(chatHistory);
   var recent=chatHistory.slice(-20);
   var recentText=recent.map(function(m){return (m.role==='ai'?'助手':'用户')+': '+m.content}).join('\n');
