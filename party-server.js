@@ -23,10 +23,10 @@ const server=http.createServer((req,res)=>{
 
   // AI 算命 API
   if(req.method==='POST'&&url==='/api/fortune'){
-    let body='';
-    req.on('data',c=>body+=c);
+    let body=[];
+    req.on('data',c=>body.push(c));
     req.on('end',()=>{
-      try{const d=JSON.parse(body);aiFortune(d,res);}
+      try{const raw=Buffer.concat(body).toString('utf8');const d=JSON.parse(raw);aiFortune(d,res);}
       catch(e){res.writeHead(400);res.end(JSON.stringify({error:'参数错误',len:body.length,raw:body.slice(0,50)}));}
     });
     return;
@@ -34,10 +34,10 @@ const server=http.createServer((req,res)=>{
 
   // AI 共创小说 API
   if(req.method==='POST'&&url==='/api/cowrite'){
-    let body='';
-    req.on('data',c=>body+=c);
+    let body=[];
+    req.on('data',c=>body.push(c));
     req.on('end',()=>{
-      try{const d=JSON.parse(body);aiCowrite(d,res);}
+      try{const raw=Buffer.concat(body).toString('utf8');const d=JSON.parse(raw);aiCowrite(d,res);}
       catch(e){res.writeHead(400);res.end(JSON.stringify({error:'参数错误',len:body.length,raw:body.slice(0,50)}));}
     });
     return;
