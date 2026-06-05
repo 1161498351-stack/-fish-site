@@ -108,6 +108,11 @@ h1{font-size:44px;letter-spacing:12px;font-weight:400;margin-bottom:6px;
 .mode-tab:hover{border-color:#a06040}
 .fortune-text{font-size:14px;color:#c8a880;line-height:2;text-align:left;padding:10px 0;white-space:pre-line}
 .fortune-text em{color:#ffd700;font-weight:700;font-style:normal}
+.poem-display{font-size:18px;color:#f0d080;line-height:2.4;text-align:center;padding:16px 0;letter-spacing:2px;font-weight:700;border-top:1px solid #402020;border-bottom:1px solid #402020;margin:8px 0}
+.sign-name-display{text-align:center;font-size:20px;color:#e0c060;letter-spacing:4px;margin:8px 0;font-weight:700}
+.sign-level{display:inline-block;padding:4px 20px;border-radius:20px;font-size:13px;border:1px solid #c08040;color:#e0b040;text-align:center;margin:4px auto;letter-spacing:2px}
+.reading-label{font-size:12px;color:#a06040;letter-spacing:2px;margin:12px 0 4px}
+.advice-label{font-size:12px;color:#a06040;letter-spacing:2px;margin:12px 0 4px}
 .result .again{display:block;margin:22px auto 0;padding:11px 36px;background:transparent;
   border:1px solid #503030;color:#a08060;font-family:inherit;font-size:14px;letter-spacing:3px;
   border-radius:22px;cursor:pointer;transition:all .3s}
@@ -317,7 +322,21 @@ function shake(){
     }
     if(!resultText)resultText='（天机未显，请先排八字，或稍后再试）';
 
-    document.getElementById('fortuneText').innerHTML=resultText.replace(/\n/g,'<br>');
+    // 美化签诗显示
+    var html=resultText;
+    // 签文区 — 大字号、居中、金色
+    html=html.replace(/【签文】([\s\S]*?)(?=【|$)/,function(_,poem){
+      return '<div class="poem-display">'+poem.trim().replace(/\n/g,'<br>')+'</div>';
+    });
+    // 签名 — 装饰标签
+    html=html.replace(/【签名】(.+)/,'<div class="sign-name-display">$1</div>');
+    // 签等 — 徽章
+    html=html.replace(/【签等】(.+)/,'<div class="sign-level">$1</div>');
+    // 其余内容 — 正常解读
+    html=html.replace(/【(解读|命局解读)】/g,'<div class="reading-label">📖 $1</div>');
+    html=html.replace(/【(寄语|人生建议)】/g,'<div class="advice-label">💫 $1</div>');
+    html=html.replace(/\n/g,'<br>');
+    document.getElementById('fortuneText').innerHTML=html;
     document.getElementById('modeTabs').style.display='flex';
 
     var result=document.getElementById('result');

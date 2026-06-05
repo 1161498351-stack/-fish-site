@@ -91,12 +91,12 @@ function aiFortune(d,res){
   const todayGz=d.todayGz||'';
   const baziInfo=bazi?'八字：'+bazi+'（'+wx+'命）'+gender:'无八字信息';
   const gzInfo=todayGz?'今日干支：'+todayGz:'今日干支未提供，只能做一般性解读';
-  const sysPrompt='你是一位熟悉传统八字文化的老先生，话不多但句句到位。你只做民俗文化和娱乐性质的运势解读，不做确定性预言。不得给医疗、投资、法律等现实决策建议。表达克制、实在，不吓唬用户。';
+  const sysPrompt='你是庙里解签的老先生，文采好、有禅意。你写的签诗有意境，签文有智慧，不吓人、不说教。你只做民俗文化娱乐解读，不给医疗投资法律建议。';
   let userPrompt;
   if(mode==='today'){
-    userPrompt='请为「'+name+'」推算今日运势。\n\n'+baziInfo+'\n'+gzInfo+'\n\n请严格按以下格式输出：\n【今日总评】一句话\n【干支关系】今日干支与命主日柱的关系\n【运势评级】★☆☆☆☆ ~ ★★★★★\n【事业】一句话\n【人际】一句话\n【健康】一句话\n【今日宜】两项\n【今日忌】两项\n【一句话】结尾鼓励\n\n如果信息不足，不要编造，请明确说明。控制在250字以内。';
+    userPrompt='请为「'+name+'」写一支今日运势签。\n\n'+baziInfo+'\n'+gzInfo+'\n\n请输出：\n【签文】四行七言签诗，有意境有韵味，像庙里真签\n【签名】四个字（如"青龙得位""紫气东来"）\n【签等】上上 / 上 / 中吉 / 中 / 中平 / 下\n【解读】80字内白话解读今日运势，温暖有趣，像老友叮嘱。可以提今日宜做什么、忌做什么\n【寄语】一句走心的话\n\n如果信息不足不要编造。注意：签诗要像诗，不要大白话。';
   }else{
-    userPrompt='请为「'+name+'」做八字整体分析。\n\n'+baziInfo+'\n\n请严格按以下格式输出：\n【命局特点】日主强弱与格局简述\n【五行喜忌】最需/最忌的五行\n【事业方向】2-3个适合方向（仅为民俗参考）\n【财运特征】简述（仅为民俗参考）\n【感情提示】简述（仅为民俗参考）\n【健康关注】简述（仅为民俗参考）\n【当前大运】简述\n【人生建议】一句话\n\n注意：每项都要加"仅为民俗文化参考，不构成现实建议"。语言实在，不故弄玄虚，控制在350字以内。';
+    userPrompt='请为「'+name+'」批一支人生签。\n\n'+baziInfo+'\n\n请输出：\n【签文】四行七言签诗，概括此生命局特点\n【签名】四个字\n【命局解读】100字内白话解读命局特点和人生走势，像老先生聊天，不故弄玄虚\n【人生建议】一句有禅意的话\n\n仅供民俗文化娱乐参考。';
   }
   const body=JSON.stringify({model:'deepseek-chat',messages:[{role:'system',content:sysPrompt},{role:'user',content:userPrompt}],temperature:0.7,max_tokens:mode==='today'?500:700});
   const apiReq=https.request({hostname:'api.deepseek.com',path:'/chat/completions',method:'POST',
