@@ -33,6 +33,18 @@ const server=http.createServer((req,res)=>{
     return;
   }
 
+  // 人格分析 API
+  if(req.method==='POST'&&url==='/api/personality'){
+    req.setEncoding('utf8');
+    let body='';
+    req.on('data',c=>body+=c);
+    req.on('end',()=>{
+      try{const d=JSON.parse(body);aiPersonality(d,res);}
+      catch(e){res.writeHead(400);res.end(JSON.stringify({error:'请求格式错误'}));}
+    });
+    return;
+  }
+
   // AI 共创小说 API
   if(req.method==='POST'&&url==='/api/cowrite'){
     req.setEncoding('utf8');
@@ -58,66 +70,44 @@ const server=http.createServer((req,res)=>{
 });
 
 function aiFortune(d,res){
-  const name=d.name||'有缘人',wx=d.wuxing||'未知',bazi=d.bazi||'',gender=d.gender||'';
-  const baziStr=bazi?`\n八字：${bazi}（${wx}命）${gender?'，'+gender:''}`:'';
-
-  const prompt=`你是一位精通周易、八字命理和传统文化的老先生。请为「${name}」写一支事业运势灵签。${baziStr}
-
-要求：
-1. 一支四行签诗（七言绝句风格，押韵更好），签诗要有意境，每行七个字
-2. 签名（四个字，如"青龙得位"），要像真正的庙签
-3. 签等（上上/上/中吉/中/中平/下）
-4. 一段150字左右的白话事业解读，结合八字五行，有具体建议，语气温暖像老友谈心
-5. 一句行动建议（宜/忌 格式）
-
-请严格按以下JSON格式回复，不要有其他内容：
-{"sign":"签名","level":"签等","poem":"签诗\\n换行","reading":"解读内容","advice":"建议"}`;
-
-  const body=JSON.stringify({model:'deepseek-chat',messages:[{role:'user',content:prompt}],temperature:0.9,max_tokens:800});
+  const name=d.name||'有缘人',wx=d.wuxing||'未知',bazi=d.bazi||'',gender=d.gender||'',mode=d.mode||'today';
+  const baziInfo=bazi?'八字：'+bazi+'（'+wx+'命）'+gender:'无八字信息';
+  let sysPrompt,userPrompt;
+  if(mode==='today'){
+    sysPrompt='你是一位精通八字命理和择日学的老先生。你根据一个人的八字日柱和当天干支，推算当日运势。你的风格：像庙里解签的老先生，话不多但句句到位。';
+    userPrompt='请为「'+name+'」推算今日运势。'+baziInfo+'\n\n要求：\n1. 先看今日干支与命主日柱的生克关系\n2. 给出今日运势评级（大吉/吉/平/凶）\n3. 分析今日事业、人际、健康三个方面的注意事项\n4. 给出今日宜忌（各2条）\n5. 最后送一句鼓励的话\n6. 控制在200字以内，语言简洁有力，不要太啰嗦';
+  }else{
+    sysPrompt='你是一位精通八字命理的老先生，有三十年批命经验。你根据一个人的八字格局、五行喜忌、大运走势，给出整体人生分析。你的风格：直率、深刻、不故弄玄虚，像褚时健那种实在的老辈人。';
+    userPrompt='请为「'+name+'」做八字整体分析。'+baziInfo+'\n\n要求：\n1. 分析日主强弱和格局特点（50字内）\n2. 五行喜忌：最需要的五行和最需要避开的五行\n3. 事业方向：适合的行业和岗位类型（2-3个方向）\n4. 财运特点：正财还是偏财，适合的投资风格\n5. 感情婚姻：需要注意的方面\n6. 健康提示：需要关注的方面\n7. 当前大运简析\n8. 总结一句人生建议\n\n语言要实在，不要假大空，像在给自家孩子讲实话。控制在400字以内。';
+  }
+  const body=JSON.stringify({model:'deepseek-chat',messages:[{role:'system',content:sysPrompt},{role:'user',content:userPrompt}],temperature:0.8,max_tokens:mode==='today'?500:800});
   const apiReq=https.request({hostname:'api.deepseek.com',path:'/chat/completions',method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer '+DS_KEY}},apiRes=>{
     let data='';apiRes.on('data',c=>data+=c);
     apiRes.on('end',()=>{
       try{
         const j=JSON.parse(data);
-        const content=j.choices[0].message.content;
-        // 尝试从回复里提取 JSON
-        const m=content.match(/\{[\s\S]*\}/);
-        const r=JSON.parse(m?m[0]:content);
+        const content=j.choices[0].message.content.trim();
         res.writeHead(200,{'Content-Type':'application/json;charset=utf-8'});
-        res.end(JSON.stringify({code:200,data:r}));
+        res.end(JSON.stringify({code:200,data:{text:content,mode:mode}}));
       }catch(e){
         res.writeHead(200,{'Content-Type':'application/json;charset=utf-8'});
-        res.end(JSON.stringify({code:200,data:{sign:'天机不可泄',level:'中',poem:'天机浩渺不可测\\n人事纷繁自有涯\\n但行好事莫问程\\n春风送暖入君家',reading:'今日卦象未显，天机不可轻泄。但天道酬勤，只要心诚自有好报。不妨稍后再试，或先摇一支签。',advice:'宜：心诚则灵 · 静待天时'}}));
+        res.end(JSON.stringify({code:200,data:{text:'今日卦象未显，天机不可轻泄。但天道酬勤，心诚自有好报。',mode:mode}}));
       }
     });
   });
   apiReq.on('error',()=>{
     res.writeHead(200,{'Content-Type':'application/json;charset=utf-8'});
-    res.end(JSON.stringify({code:200,data:{sign:'网络未通',level:'中',poem:'网络迢迢路未通\\n暂凭旧卦问西东\\n世间万事皆天定\\n何必急在一时中',reading:'网络暂时不通，但天机不在一时。你当下最需要的不是一支签，而是静下来问问自己的心。答案一直在你心里。',advice:'宜：稍后再试 · 先喝杯茶'}}));
+    res.end(JSON.stringify({code:200,data:{text:'网络未通，但天机不在一时。静下来问问自己的心，答案一直在你心里。',mode:mode}}));
   });
   apiReq.write(body);apiReq.end();
 }
 
 function aiCowrite(d,res){
   const story=d.story||'',title=d.title||'未命名',style=d.style||'自由';
-  const prompt=`你是一位中文小说家，正在和朋友一起写小说。
-
-标题：《${title}》
-风格：${style}
-
-已写内容：
----
-${story}
----
-
-请你接着往下写一段（200-400字）。注意：
-1. 用口语化的中文，像正常人说话那样自然，不要翻译腔
-2. 多写对话和动作，少写抽象抒情
-3. 可以推进剧情，也可以揭示人物内心
-4. 在有意思的地方停笔，让对方想接着写
-5. 只输出续写文字，别加"以下是续写"之类的废话`;
-  const body=JSON.stringify({model:'deepseek-chat',messages:[{role:'user',content:prompt}],temperature:0.85,max_tokens:800});
+  const sysPrompt='你是一位出版过多部畅销小说的职业作家。你的文字有强烈的画面感和节奏感，擅长用简洁有力的白描和生动的对话推进情节。你的写作信条是：少用形容词，多用动词；少抒情议论，多展示细节；每个段落都应该要么推进剧情，要么揭示人物。';
+  const userPrompt='我们正在合写一篇小说。\n\n标题：《'+title+'》\n风格方向：'+style+'\n\n已写内容：\n---\n'+story+'\n---\n\n请你接着往下写一段（150-400字）。要求：\n1. 开头直接承接上文最后一句话的情绪或动作\n2. 至少包含一处生动的感官细节（声音/气味/触感/光线）\n3. 如果有对话，每句话都要符合说话人的性格\n4. 段落要有节奏感——短句制造紧张，长句营造氛围\n5. 在情节转折点或人物内心波动处停笔，留悬念\n6. 语言要干净利落，删掉所有可有可无的字\n7. 只输出续写内容，不要任何说明';
+  const body=JSON.stringify({model:'deepseek-chat',messages:[{role:'system',content:sysPrompt},{role:'user',content:userPrompt}],temperature:0.9,max_tokens:600});
   const apiReq=https.request({hostname:'api.deepseek.com',path:'/chat/completions',method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer '+DS_KEY}},apiRes=>{
     let data='';apiRes.on('data',c=>data+=c);
@@ -316,6 +306,40 @@ function playerDescribe(ws,text){
   if(bots.length===0){
     checkAllDescribed(room);
   }
+}
+
+function aiPersonality(d,res){
+  const history=d.history||[],name=d.name||'朋友',mode=d.mode||'chat';
+  const sysPrompt='你是一位资深心理学专家，精通MBTI、大五人格、九型人格等分析工具。你通过轻松自然的聊天来了解一个人，而不是做问卷。你的风格：温暖、不评判、偶尔幽默，像一位阅历丰富的忘年交。每次回复2-4句话，控制在100字以内，像真人聊天。你心里有个清单需要逐步了解：工作状态、人际关系、压力应对、价值观、童年经历、理想生活，但不要直接审问，要在自然对话中慢慢覆盖。';
+  let userPrompt;
+  if(mode==='start'){
+    userPrompt='你好！我叫'+name+'。请用一句温暖的话开始我们的人格探索之旅。简单介绍你自己，然后问我一个关于日常生活或工作的小问题。注意：不要提任何专业术语，不要像在做测试，就像朋友聊天一样自然。';
+  }else if(mode==='report'){
+    userPrompt='基于我们的聊天记录，请给我一份详细的人格分析报告。务必引用对话中的原话来支撑你的分析。格式如下：\n\n【性格画像】用3-5个关键词概括，每个词配一句解释，尽量引用对话原话\n\n【MBTI推测】推测类型并解释，引用对话中的具体表现\n\n【优势领域】工作/人际/创造力等，结合对话中提到的实际情况\n\n【潜在盲区】2-3个可能需要留意的地方\n\n【成长建议】3条具体可行的建议\n\n【适合职业】推荐3-5个职业方向并解释原因\n\n【关系模式】在亲密关系和职场关系中可能的特点\n\n聊天记录：\n'+history.map(function(m){return m.role+': '+m.content}).join('\n')+'\n\n请生成报告，语言温暖真诚，引用对话原话时标出。';
+  }else{
+    userPrompt='对话历史：\n'+history.map(function(m){return m.role+': '+m.content}).join('\n')+'\n\n请基于以上对话，自然地回应我。可以追问、分享见解、或者深入某个话题。目标是逐步了解我的性格。记住你还没覆盖到的维度，自然地引导过去。像朋友聊天，每次只说一件事，2-4句话，不要长篇大论。';
+  }
+  const body=JSON.stringify({model:'deepseek-chat',messages:[{role:'system',content:sysPrompt},{role:'user',content:userPrompt}],temperature:0.8,max_tokens:mode==='report'?1500:300});
+  const apiReq=https.request({hostname:'api.deepseek.com',path:'/chat/completions',method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+DS_KEY}},apiRes=>{
+    let data='';apiRes.on('data',c=>data+=c);
+    apiRes.on('end',()=>{
+      try{
+        const j=JSON.parse(data);
+        const content=j.choices[0].message.content.trim();
+        res.writeHead(200,{'Content-Type':'application/json;charset=utf-8'});
+        res.end(JSON.stringify({code:200,data:{text:content}}));
+      }catch(e){
+        res.writeHead(200,{'Content-Type':'application/json;charset=utf-8'});
+        res.end(JSON.stringify({code:200,data:{text:'（让我想想…重新组织一下语言）'}}));
+      }
+    });
+  });
+  apiReq.on('error',()=>{
+    res.writeHead(200,{'Content-Type':'application/json;charset=utf-8'});
+    res.end(JSON.stringify({code:200,data:{text:'（网络不太稳定，稍等一下再试）'}}));
+  });
+  apiReq.write(body);apiReq.end();
 }
 
 function checkAllDescribed(room){
