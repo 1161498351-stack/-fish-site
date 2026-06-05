@@ -194,7 +194,8 @@ function matchKB(chatHistory){
 
 function genReport(){
   if(!confirm('基于当前'+Math.floor(chatHistory.length/2)+'轮对话生成深度分析报告？'))return;
-  var btn=G('reportBtn');btn.disabled=true;btn.textContent='⏳ 分析中…';
+  var btn=G('reportBtn'),matched=matchKB(chatHistory);
+  btn.disabled=true;btn.textContent='⏳ 分析中…';
   fetch('/api/personality',{
     method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({chatHistory:chatHistory,name:'朋友',mode:'report',kbHints:matched})
